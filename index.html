@@ -2010,6 +2010,14 @@ function App() {
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
         </div>
         <div style={{flexShrink:0,padding:'10px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:11,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)'}}>
+          {/* 追加: Pro解約リンク */}
+          {state.isPro && (
+            <div style={{marginBottom:6}}>
+              <button onClick={() => { if(confirm('有料プランを解約しますか？\n解約後も当月末までご利用いただけます。\n\nメールで解約手続きを行います。')) { window.location.href='mailto:robastar359380@gmail.com?subject=DocuMint%20有料プラン解約希望&body=解約を希望します。%0A%0A登録メールアドレス：' + (user?.email||''); } }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'4px 12px',borderRadius:6,fontSize:10,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
+                有料プランを解約する
+              </button>
+            </div>
+          )}
           Copyright © 2026 ROBA★STAR (驢馬星)
           <br/><a href="/tokushoho.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>特定商取引法に基づく表記</a>
         </div>
