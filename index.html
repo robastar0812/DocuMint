@@ -255,7 +255,7 @@ function useAppState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ myCompany, client, document: doc, docSettings, templates, savedDocs, isPro }));
     } catch (e) {
-      // localStorage容量超過時：古い保管書類を警告
+      // localStorage容量超過時：古い保存書類を警告
       console.warn('localStorage保存エラー:', e.message);
     }
   }, [myCompany, client, doc, docSettings, templates, savedDocs, isPro]);
@@ -526,7 +526,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
     <div className="history-panel">
       <div className="history-tabs">
         <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => setTab('docs')}>
-          📂 保管書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
+          📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
         </button>
         <button className={`htab ${tab==='templates'?'active':''}`} onClick={() => setTab('templates')}>
           📋 テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
@@ -543,7 +543,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
           <div className="save-btns">
             <button className="btn btn-outline btn-sm" onClick={() => { setMode('saveDoc'); setTab('docs'); }}
               style={{position:'relative'}}>
-              💾 書類を保管
+              💾 書類を保存
               {!isPro && <span style={{marginLeft:6,fontSize:10,color:savedDocs.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
                 {savedDocs.length}/{FREE_LIMIT}
               </span>}
@@ -562,7 +562,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       </div>
       {tab === 'docs' && (
         <div className="history-list">
-          {savedDocs.length === 0 ? <div className="history-empty">保管した書類はありません</div> :
+          {savedDocs.length === 0 ? <div className="history-empty">保存した書類はありません</div> :
             [...savedDocs].reverse().map(d => (
               <div key={d.id} className="history-item">
                 <div className="history-item-info">
@@ -1020,7 +1020,7 @@ function InstallModal({ onClose }) {
 
 // ==================== 有料プラン誘導モーダル ====================
 function UpgradeModal({ type, onClose }) {
-  const typeLabel = type === 'template' ? 'テンプレート' : '保管書類';
+  const typeLabel = type === 'template' ? 'テンプレート' : '保存書類';
   const [loading, setLoading] = useState(false);
 
   // === Stripe Checkout へリダイレクト ===
@@ -1067,7 +1067,7 @@ function UpgradeModal({ type, onClose }) {
           </div>
           {[
             ['テンプレート', '2件まで', '無制限'],
-            ['保管書類', '2件まで', '無制限'],
+            ['保存書類', '2件まで', '無制限'],
             ['デザイン設定', '✅', '✅'],
             ['クラウド同期', '❌', '✅（近日公開）'],
           ].map(([feat, free, paid]) => (
@@ -1150,8 +1150,8 @@ const TOUR_STEPS = [
   },
   {
     id: 'tour-history',
-    title: '⑩ 書類を保管・テンプレート',
-    desc: '作成した書類を名前をつけて保管できます。後から呼び出して編集も可能です。よく使う明細パターンはテンプレートとして保存しておくと次回から一発で呼び出せます。',
+    title: '⑩ 書類を保存・テンプレート',
+    desc: '作成した書類を名前をつけて保存できます。後から呼び出して編集も可能です。よく使う明細パターンはテンプレートとして保存しておくと次回から一発で呼び出せます。',
   },
   {
     id: 'tour-pdf',
@@ -1347,9 +1347,9 @@ function HelpModal({ onClose }) {
       {step:'③ フォントを選ぶ',desc:'明朝体・ゴシック体・システムフォントから選択します。',detail:'「適用する」ボタンを押すとリアルタイムでプレビューに反映されます。'},
     ]},
     {id:'save',title:'💾 書類を保存・管理する',content:[
-      {step:'① 書類を保管する',desc:'サイドバーを下にスクロールして「💾 書類を保管」ボタンをクリックします。',detail:'書類名を入力してEnterキーまたは「保存」ボタンを押します。'},
+      {step:'① 書類を保存する',desc:'サイドバーを下にスクロールして「💾 書類を保存」ボタンをクリックします。',detail:'書類名を入力してEnterキーまたは「保存」ボタンを押します。'},
       {step:'② テンプレートを保存する',desc:'「＋ テンプレート保存」ボタンをクリックします。',detail:'よく使う明細をテンプレートとして保存できます。'},
-      {step:'③ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保管していない書類は消えますのでご注意ください。'},
+      {step:'③ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保存していない書類は消えますのでご注意ください。'},
     ]},
     {id:'output',title:'📥 PDF・印刷・コンビニ印刷',content:[
       {step:'① PDFダウンロード',desc:'「📥 PDFダウンロード」ボタンをクリックします。',detail:'A4サイズのPDFファイルがダウンロードされます。'},
@@ -1694,7 +1694,7 @@ function App() {
     const checkout = params.get('checkout');
     if (checkout === 'success') {
       setIsPro(true); // 有料プラン有効化
-      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保管が無制限になりました。' });
+      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保存が無制限になりました。' });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
     }
