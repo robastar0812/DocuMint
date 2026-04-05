@@ -192,9 +192,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .mobile-tabs{display:flex;background:var(--color-primary);position:sticky;top:0;z-index:100;flex-shrink:0;}
   .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.6);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
   .mobile-tab.active{color:white;border-bottom-color:white;}
-  .sidebar{width:100%;min-width:unset;border-right:none;flex:1;overflow-y:auto;}
-  .sidebar.hidden{display:none;}.main-area.hidden{display:none;}
-  .main-area{flex:1;padding:8px 4px;overflow-y:auto;overflow-x:hidden;}
+  .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;}
+  .sidebar.hidden{display:none!important;}.main-area.hidden{display:none!important;}
+  .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;}
   /* A4をビューポート幅に合わせて自動スケール */
   .preview-wrapper{width:100%;overflow-x:hidden;}
   .a4-paper{
@@ -1638,7 +1638,7 @@ function App() {
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
-      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
+      <aside className="sidebar" style={{display:mobileTab==='preview'?'none':'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} />
         </div>
@@ -1646,7 +1646,7 @@ function App() {
           Copyright © 2026 ROBA★STAR (驢馬星)
         </div>
       </aside>
-      <main className={`main-area ${mobileTab==='input'?'hidden':''}`}>
+      <main className="main-area" style={{display:mobileTab==='input'?'none':'flex'}}>
         <Preview state={state} />
       </main>
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
