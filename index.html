@@ -16,6 +16,7 @@
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><!-- 追加: Supabase -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -31,7 +32,7 @@
   --doc-font:'Noto Serif JP',serif;
 }
 html,body,#root{height:100%;}
-body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;/* 追加: iOS文字自動拡大防止 */}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--color-border-dark);border-radius:3px;}
 
 /* ボタン */
@@ -142,7 +143,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 /* A4プレビュー */
 .preview-wrapper{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;touch-action:manipulation;/* 追加: iOSダブルタップズーム防止 */}
 .preview-label{font-size:13px;font-weight:600;color:var(--color-text-muted);letter-spacing:.1em;align-self:stretch;text-align:center;padding:10px 0 6px;}
-.a4-paper{width:794px;min-height:1123px;background:white;box-shadow:var(--shadow-lg);padding:60px 64px;position:relative;color:#1a1a1a;border-radius:2px;transform-origin:top center;touch-action:manipulation;/* 追加: iOSダブルタップズーム防止 */}
+.a4-paper{width:794px;min-height:1123px;background:white;box-shadow:var(--shadow-lg);padding:60px 64px;position:relative;color:#1a1a1a;border-radius:2px;transform-origin:top center;touch-action:manipulation;-webkit-text-size-adjust:none;text-size-adjust:none;/* 追加: iOS縮小時の文字拡大完全防止 */}
 .doc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;padding-bottom:20px;border-bottom:2px solid #1a2744;}
 .doc-title{font-size:28px;font-weight:600;color:#1a2744;letter-spacing:.12em;}
 .doc-meta{text-align:right;font-size:12px;color:#555;line-height:1.9;}
@@ -169,9 +170,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .doc-total-row{display:flex;gap:48px;font-family:var(--font-sans);font-size:13px;color:#555;}
 .doc-total-row span:last-child{min-width:110px;text-align:right;}
 .doc-total-row.grand{padding:10px 16px;border-radius:6px;font-size:15px;font-weight:700;margin-top:4px;}
-.doc-bank{background:#f5f3ef;border-radius:6px;padding:14px 18px;margin-bottom:20px;font-family:var(--font-sans);}
-.doc-bank-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:#777;margin-bottom:6px;}
-.doc-bank-info{font-size:12px;color:#333;line-height:1.7;}
+.doc-bank{background:#f5f3ef;border-radius:6px;padding:14px 18px;margin-bottom:20px;font-family:var(--font-sans);-webkit-text-size-adjust:none;/* 追加: 振込先文字サイズ固定 */}
+.doc-bank-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:#777;margin-bottom:6px;-webkit-text-size-adjust:none;}
+.doc-bank-info{font-size:12px;color:#333;line-height:1.7;-webkit-text-size-adjust:none;}
 .doc-notes{border-top:1px solid #e0dcd6;padding-top:16px;font-family:var(--font-sans);}
 .doc-notes-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:#777;margin-bottom:6px;}
 .doc-notes-body{font-size:12px;color:#444;line-height:1.8;white-space:pre-wrap;}
@@ -210,12 +211,91 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .doc-total-box,.doc-total-row.grand,.doc-table thead tr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   @page{margin:0;size:A4;}
 }
+/* 追加: 認証UI */
+.auth-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--color-border-dark);border-radius:var(--radius-md);background:transparent;font-family:var(--font-sans);font-size:11px;font-weight:500;color:var(--color-primary);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.auth-btn:hover{background:var(--color-surface);border-color:var(--color-primary);}
+.auth-btn.logged-in{border-color:#27ae60;color:#27ae60;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.auth-tabs{display:flex;margin-bottom:20px;border-bottom:2px solid var(--color-border);}
+.auth-tab{flex:1;padding:10px;border:none;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.auth-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
+.auth-msg{padding:10px 14px;border-radius:var(--radius-md);font-size:12px;margin-bottom:14px;line-height:1.5;}
+.auth-msg.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+.auth-msg.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+.auth-msg.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+.sync-indicator{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-light);padding:2px 8px;border-radius:99px;background:var(--color-surface);border:1px solid var(--color-border);}
+.sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
+.sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useRef, useCallback, useEffect } = React;
+
+// ==================== Supabase 初期化（追加） ====================
+const SUPABASE_URL = 'https://lbzvzniuqgzpjzccjaal.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ak2WcRZ5u-CVNgSLj8HPKA_cquuQUmB';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 認証フック（追加）
+function useAuth() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = (email, password) => supabaseClient.auth.signInWithPassword({ email, password });
+  const signUp = (email, password) => supabaseClient.auth.signUp({ email, password });
+  const signOut = () => supabaseClient.auth.signOut();
+  const resetPassword = (email) => supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+
+  return { user, authLoading, signIn, signUp, signOut, resetPassword };
+}
+
+// Supabaseデータ読込（追加）
+async function loadSupabaseData(userId) {
+  try {
+    // プロフィール取得（isPro）
+    const { data: profile } = await supabaseClient.from('profiles').select('is_pro').eq('id', userId).single();
+    // ユーザーデータ取得
+    const { data: userData } = await supabaseClient.from('user_data').select('*').eq('user_id', userId).single();
+    return { profile, userData };
+  } catch (e) {
+    console.warn('Supabaseデータ読込エラー:', e.message);
+    return { profile: null, userData: null };
+  }
+}
+
+// Supabaseデータ保存（追加）
+let _saveTimer = null;
+function saveToSupabase(userId, state) {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try {
+      const payload = {
+        user_id: userId,
+        my_company: state.myCompany,
+        client_data: state.client,
+        doc_settings: state.docSettings,
+        templates: state.templates,
+        saved_docs: state.savedDocs.map(d => { const {stampImage, logoImage, ...rest} = (d.document || d); return {...d, document: rest}; }),
+        updated_at: new Date().toISOString(),
+      };
+      await supabaseClient.from('user_data').upsert(payload, { onConflict: 'user_id' });
+    } catch (e) {
+      console.warn('Supabase保存エラー:', e.message);
+    }
+  }, 2000); // 2秒デバウンス
+}
 
 // ==================== ストア ====================
 const STORAGE_KEY = 'invoice-app-storage';
@@ -284,7 +364,17 @@ function useAppState() {
   const loadDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) { setDocState(p => ({...d.document, stampImage: p.stampImage, logoImage: p.logoImage})); setClientState(d.client); } };
   const deleteDoc = id => setSavedDocs(p => p.filter(d=>d.id!==id));
 
-  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab };
+  // 追加: Supabaseからの一括読込
+  const loadAll = (data) => {
+    if (data.myCompany) setMyCompanyState({...defaultMyCompany, ...data.myCompany});
+    if (data.client) setClientState({...defaultClient, ...data.client});
+    if (data.docSettings) setDocSettingsState({...defaultDocSettings, ...data.docSettings});
+    if (data.templates) setTemplates(data.templates);
+    if (data.savedDocs) setSavedDocs(data.savedDocs);
+    if (typeof data.isPro === 'boolean') setIsPro(data.isPro);
+  };
+
+  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab, loadAll /* 追加 */ };
 }
 
 // ==================== ユーティリティ ====================
@@ -1069,7 +1159,7 @@ function UpgradeModal({ type, onClose }) {
             ['テンプレート', '2件まで', '無制限'],
             ['保存書類', '2件まで', '無制限'],
             ['デザイン設定', '✅', '✅'],
-            ['クラウド同期', '❌', '✅（近日公開）'],
+            ['クラウド同期', '✅（要ログイン）', '✅'],
           ].map(([feat, free, paid]) => (
             <div key={feat} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',borderTop:'1px solid #e5e7eb',fontSize:12}}>
               <div style={{padding:'8px',color:'#555',textAlign:'left',paddingLeft:12}}>{feat}</div>
@@ -1093,6 +1183,113 @@ function UpgradeModal({ type, onClose }) {
           >
             今は無料のまま使う
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+// ================================================================
+
+// ==================== 認証モーダル（追加） ====================
+function AuthModal({ onClose, onLogin }) {
+  const [tab, setTab] = useState('login'); // 'login' | 'signup' | 'reset'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState(null); // {type:'success'|'error'|'info', text:''}
+
+  const handleLogin = async () => {
+    if (!email || !password) { setMsg({type:'error',text:'メールアドレスとパスワードを入力してください'}); return; }
+    setLoading(true); setMsg(null);
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      setMsg({type:'error',text: error.message === 'Invalid login credentials' ? 'メールアドレスまたはパスワードが正しくありません' : error.message});
+    } else {
+      if (onLogin) onLogin();
+      onClose();
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!email || !password) { setMsg({type:'error',text:'メールアドレスとパスワードを入力してください'}); return; }
+    if (password.length < 6) { setMsg({type:'error',text:'パスワードは6文字以上にしてください'}); return; }
+    setLoading(true); setMsg(null);
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    setLoading(false);
+    if (error) {
+      setMsg({type:'error',text: error.message});
+    } else {
+      setMsg({type:'success',text:'📧 確認メールを送信しました！メール内のリンクをクリックしてアカウントを有効化してください。'});
+    }
+  };
+
+  const handleReset = async () => {
+    if (!email) { setMsg({type:'error',text:'メールアドレスを入力してください'}); return; }
+    setLoading(true); setMsg(null);
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    setLoading(false);
+    if (error) {
+      setMsg({type:'error',text: error.message});
+    } else {
+      setMsg({type:'success',text:'📧 パスワードリセットメールを送信しました。メールを確認してください。'});
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
+        onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
+      <div className="modal-box" style={{maxWidth:420}}>
+        <div className="modal-header">
+          <div className="modal-title">{tab==='reset'?'パスワードリセット':'アカウント'}</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          {tab !== 'reset' && (
+            <div className="auth-tabs">
+              <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>{setTab('login');setMsg(null);}}>ログイン</button>
+              <button className={`auth-tab ${tab==='signup'?'active':''}`} onClick={()=>{setTab('signup');setMsg(null);}}>新規登録</button>
+            </div>
+          )}
+          {msg && <div className={`auth-msg ${msg.type}`}>{msg.text}</div>}
+          <div className="form-group">
+            <label className="form-label">メールアドレス</label>
+            <input className="input" type="email" placeholder="example@mail.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(tab==='login'?handleLogin():tab==='signup'?handleSignup():handleReset())} />
+          </div>
+          {tab !== 'reset' && (
+            <div className="form-group">
+              <label className="form-label">パスワード{tab==='signup'?' （6文字以上）':''}</label>
+              <input className="input" type="password" placeholder="••••••" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(tab==='login'?handleLogin():handleSignup())} />
+            </div>
+          )}
+        </div>
+        <div className="modal-footer" style={{flexDirection:'column',gap:8}}>
+          {tab === 'login' && (
+            <>
+              <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleLogin} disabled={loading}>
+                {loading ? '⏳ ログイン中...' : '🔑 ログイン'}
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={()=>{setTab('reset');setMsg(null);}}>パスワードを忘れた方</button>
+            </>
+          )}
+          {tab === 'signup' && (
+            <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleSignup} disabled={loading}>
+              {loading ? '⏳ 登録中...' : '✨ 無料アカウント作成'}
+            </button>
+          )}
+          {tab === 'reset' && (
+            <>
+              <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleReset} disabled={loading}>
+                {loading ? '⏳ 送信中...' : '📧 リセットメール送信'}
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={()=>{setTab('login');setMsg(null);}}>← ログインに戻る</button>
+            </>
+          )}
+        </div>
+        <div style={{padding:'0 28px 20px',textAlign:'center'}}>
+          <div style={{fontSize:10,color:'var(--color-text-light)',lineHeight:1.5}}>
+            アカウント登録すると、書類データがクラウドに自動保存され、<br/>どのデバイスからでもアクセスできるようになります。
+          </div>
         </div>
       </div>
     </div>
@@ -1546,7 +1743,7 @@ function Preview({ state }) {
   );
 }
 
-function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
+function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus /* 追加 */ }) {
   const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
@@ -1579,10 +1776,24 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
   return (
     <div className="toolbar">
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
-        {/* 1行目：ロゴ＋新規 */}
+        {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
           <div className="toolbar-logo">DocuMint</div>
-          <button className="btn btn-ghost btn-sm" onClick={resetDocument} style={{fontSize:11,padding:'4px 8px',whiteSpace:'nowrap'}}>＋ 新規</button>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            {/* 追加: 同期ステータス */}
+            {user && syncStatus && <span className={`sync-indicator ${syncStatus}`}>{syncStatus==='syncing'?'⏳ 同期中':'✅ 同期済'}</span>}
+            {/* 追加: ログイン/ユーザーボタン */}
+            {user ? (
+              <div style={{position:'relative'}}>
+                <button className="auth-btn logged-in" onClick={onSignOut} title={user.email}>
+                  👤 {user.email.split('@')[0]}
+                </button>
+              </div>
+            ) : (
+              <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
+            )}
+            <button className="btn btn-ghost btn-sm" onClick={resetDocument} style={{fontSize:11,padding:'4px 8px',whiteSpace:'nowrap'}}>＋ 新規</button>
+          </div>
         </div>
         {/* 2行目：ツアー・操作説明・デザイン */}
         <div style={{display:'flex',gap:4}}>
@@ -1683,11 +1894,56 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
 
 function App() {
   const state = useAppState();
-  const { activeModal, setActiveModal, mobileTab, setMobileTab, myCompany, setMyCompany, client, setClient, docSettings, setDocSettings, isPro, setIsPro } = state;
+  const { activeModal, setActiveModal, mobileTab, setMobileTab, myCompany, setMyCompany, client, setClient, docSettings, setDocSettings, isPro, setIsPro, loadAll } = state;
   const [tourStep, setTourStep] = useState(null); // null=非表示, 0〜N=ツアー中
   const [upgradeModal, setUpgradeModal] = useState(null); // null | 'template' | 'doc'
   const [showInstall, setShowInstall] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState(null); // 決済結果通知
+
+  // === 追加: 認証状態 ===
+  const { user, authLoading, signOut } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
+  const prevUserId = useRef(null);
+
+  // === 追加: ログイン時にSupabaseからデータ読込 ===
+  useEffect(() => {
+    if (!user || user.id === prevUserId.current) return;
+    prevUserId.current = user.id;
+    setSyncStatus('syncing');
+    loadSupabaseData(user.id).then(({ profile, userData }) => {
+      const merged = {};
+      if (userData) {
+        if (userData.my_company && Object.keys(userData.my_company).length) merged.myCompany = userData.my_company;
+        if (userData.client_data && Object.keys(userData.client_data).length) merged.client = userData.client_data;
+        if (userData.doc_settings && Object.keys(userData.doc_settings).length) merged.docSettings = userData.doc_settings;
+        if (userData.templates && userData.templates.length) merged.templates = userData.templates;
+        if (userData.saved_docs && userData.saved_docs.length) merged.savedDocs = userData.saved_docs;
+      }
+      if (profile) merged.isPro = profile.is_pro || false;
+      if (Object.keys(merged).length) loadAll(merged);
+      setSyncStatus('synced');
+      setTimeout(() => setSyncStatus(null), 3000);
+    });
+  }, [user]);
+
+  // === 追加: 状態変更時にSupabaseへ自動保存 ===
+  useEffect(() => {
+    if (!user) return;
+    setSyncStatus('syncing');
+    saveToSupabase(user.id, state);
+    const t = setTimeout(() => setSyncStatus('synced'), 2500);
+    const t2 = setTimeout(() => setSyncStatus(null), 5000);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs]);
+
+  // === 追加: ログアウト処理 ===
+  const handleSignOut = async () => {
+    if (!confirm('ログアウトしますか？\nデータはクラウドに保存済みです。')) return;
+    await signOut();
+    prevUserId.current = null;
+    setSyncStatus(null);
+  };
 
   // === Stripe決済後のリダイレクト検知 ===
   useEffect(() => {
@@ -1695,6 +1951,10 @@ function App() {
     const checkout = params.get('checkout');
     if (checkout === 'success') {
       setIsPro(true); // 有料プラン有効化
+      // 追加: ログイン中ならSupabaseのprofilesも更新
+      if (user) {
+        supabaseClient.from('profiles').update({ is_pro: true }).eq('id', user.id).then(() => {});
+      }
       setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保存が無制限になりました。' });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
@@ -1720,7 +1980,7 @@ function App() {
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
-          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} />
+          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
         </div>
         <div style={{flexShrink:0,padding:'10px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:11,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)'}}>
           Copyright © 2026 ROBA★STAR (驢馬星)
@@ -1747,6 +2007,10 @@ function App() {
       )}
       {showInstall && (
         <InstallModal onClose={() => setShowInstall(false)} />
+      )}
+      {/* 追加: 認証モーダル */}
+      {showAuth && (
+        <AuthModal onClose={() => setShowAuth(false)} onLogin={() => setShowAuth(false)} />
       )}
       {/* === 決済結果トースト通知 === */}
       {checkoutMsg && (
