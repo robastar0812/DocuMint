@@ -1713,7 +1713,7 @@ function App() {
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
-      <aside className="sidebar" style={{display:mobileTab==='preview'?'none':'flex',flexDirection:'column'}}>
+      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} />
         </div>
@@ -1721,7 +1721,7 @@ function App() {
           Copyright © 2026 ROBA★STAR (驢馬星)
         </div>
       </aside>
-      <main className="main-area" style={{display:mobileTab==='input'?'none':'flex'}}>
+      <main className={`main-area ${mobileTab==='input'?'hidden':''}`}>
         <Preview state={state} />
       </main>
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
