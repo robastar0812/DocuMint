@@ -293,14 +293,12 @@ function Dashboard({ user }) {
                       {new Date(u.created_at).toLocaleDateString('ja-JP')}
                     </td>
                     <td>
-                      {!u.is_admin && (
                         <button
                           className={`btn btn-sm ${u.is_pro ? 'btn-danger' : 'btn-pro'}`}
                           onClick={() => togglePro(u.id, u.is_pro)}
                         >
                           {u.is_pro ? 'Pro解除' : 'Pro付与'}
                         </button>
-                      )}
                     </td>
                   </tr>
                 ))}
