@@ -251,7 +251,12 @@ function useAppState() {
   const [mobileTab, setMobileTab] = useState('input');
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ myCompany, client, document: doc, docSettings, templates, savedDocs }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ myCompany, client, document: doc, docSettings, templates, savedDocs }));
+    } catch (e) {
+      // localStorage容量超過時：古い保管書類を警告
+      console.warn('localStorage保存エラー:', e.message);
+    }
   }, [myCompany, client, doc, docSettings, templates, savedDocs]);
 
   const setMyCompany = d => setMyCompanyState(p => ({...p,...d}));
@@ -270,8 +275,12 @@ function useAppState() {
   const saveTemplate = name => setTemplates(p => [...p, {id:Date.now(), name, createdAt:new Date().toISOString(), subject:doc.subject, notes:doc.notes, items:doc.items}]);
   const loadTemplate = id => { const t = templates.find(t=>t.id===id); if(t) setDocState(p=>({...p,subject:t.subject,notes:t.notes,items:t.items})); };
   const deleteTemplate = id => setTemplates(p => p.filter(t=>t.id!==id));
-  const saveDocument = name => setSavedDocs(p => [...p, {id:Date.now(), name, savedAt:new Date().toISOString(), type:doc.type, document:{...doc}, client:{...client}}]);
-  const loadDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) { setDocState(d.document); setClientState(d.client); } };
+  const saveDocument = name => setSavedDocs(p => {
+    // 画像データを除外して保存（localStorage容量節約）
+    const {stampImage, logoImage, ...docWithoutImages} = doc;
+    return [...p, {id:Date.now(), name, savedAt:new Date().toISOString(), type:doc.type, document:docWithoutImages, client:{...client}}];
+  });
+  const loadDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) { setDocState(p => ({...d.document, stampImage: p.stampImage, logoImage: p.logoImage})); setClientState(d.client); } };
   const deleteDoc = id => setSavedDocs(p => p.filter(d=>d.id!==id));
 
   return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, activeModal, setActiveModal, mobileTab, setMobileTab };
@@ -593,18 +602,42 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
 // 全角→半角変換
 const toHankaku = s => s.replace(/[\uFF21-\uFF3A\uFF41-\uFF5A\uFF10-\uFF19]/g, c => String.fromCharCode(c.charCodeAt(0) - 65248)).replace(/\u3000/g,' ');
 
-// 電話番号自動フォーマット
+// 電話番号自動フォーマット（日本の市外局番ルール準拠）
 const formatPhone = raw => {
-  const s = toHankaku(raw).replace(/[^\d]/g,'');
+  let s = toHankaku(raw).replace(/[^\d]/g,'');
   if (s.length === 0) return '';
-  // 携帯・IP電話 (090/080/070/050)
-  if (/^(090|080|070|050)/.test(s)) return s.length<=3?s:s.length<=7?s.slice(0,3)+'-'+s.slice(3):s.slice(0,3)+'-'+s.slice(3,7)+'-'+s.slice(7,11);
-  // 0120/0800 (フリーダイヤル)
-  if (/^(0120|0800)/.test(s)) return s.length<=4?s:s.length<=8?s.slice(0,4)+'-'+s.slice(4):s.slice(0,4)+'-'+s.slice(4,8)+'-'+s.slice(8,12);
-  // 03/06 (市外局番2桁)
-  if (/^(03|06|04|05|07|08|09)/.test(s)) return s.length<=2?s:s.length<=6?s.slice(0,2)+'-'+s.slice(2):s.slice(0,2)+'-'+s.slice(2,6)+'-'+s.slice(6,10);
-  // 市外局番3桁 (0XX)
-  if (s.startsWith('0') && s.length >= 1) return s.length<=3?s:s.length<=6?s.slice(0,3)+'-'+s.slice(3):s.slice(0,3)+'-'+s.slice(3,6)+'-'+s.slice(6,10);
+  // 9桁で0始まりでない → 市外局番の0省略とみなし先頭に0を補完
+  if (s.length === 9 && !s.startsWith('0')) s = '0' + s;
+  // フリーダイヤル (0120/0800) → 4-3-3 ※080携帯より先に判定
+  if (/^(0120|0800)/.test(s)) {
+    if (s.length <= 4) return s;
+    if (s.length <= 7) return s.slice(0,4)+'-'+s.slice(4);
+    return s.slice(0,4)+'-'+s.slice(4,7)+'-'+s.slice(7);
+  }
+  // 携帯・IP電話 (090/080/070/050) → 3-4-4
+  if (/^(090|080|070|050)/.test(s)) {
+    if (s.length <= 3) return s;
+    if (s.length <= 7) return s.slice(0,3)+'-'+s.slice(3);
+    return s.slice(0,3)+'-'+s.slice(3,7)+'-'+s.slice(7,11);
+  }
+  // 市外局番2桁（日本で03・06のみ） → 2-4-4
+  if (/^0[36]\d/.test(s)) {
+    if (s.length <= 2) return s;
+    if (s.length <= 6) return s.slice(0,2)+'-'+s.slice(2);
+    return s.slice(0,2)+'-'+s.slice(2,6)+'-'+s.slice(6,10);
+  }
+  // 市外局番3桁（日本の全3桁市外局番リスト） → 3-3-4
+  if (/^(011|015|017|018|019|022|023|024|025|026|027|028|029|042|043|044|045|046|047|048|049|052|053|054|055|058|059|072|073|075|076|077|078|079|082|083|084|086|087|088|089|092|093|095|096|097|098|099)\d/.test(s)) {
+    if (s.length <= 3) return s;
+    if (s.length <= 6) return s.slice(0,3)+'-'+s.slice(3);
+    return s.slice(0,3)+'-'+s.slice(3,6)+'-'+s.slice(6,10);
+  }
+  // それ以外の0始まり → 4桁市外局番 (0XXX-XX-XXXX)
+  if (s.startsWith('0')) {
+    if (s.length <= 4) return s;
+    if (s.length <= 6) return s.slice(0,4)+'-'+s.slice(4);
+    return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,10);
+  }
   return s;
 };
 
@@ -1594,7 +1627,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
       </section>
       <section id="tour-totals" className="toolbar-section totals-section">
         <div className="total-row"><span>税別合計</span><span>{formatCurrency(subtotal)}</span></div>
-        <div className="total-row"><span>消費税（10%）</span><span>{formatCurrency(taxAmount)}</span></div>
+        <div className="total-row"><span>消費税{(() => { const rates = [...new Set(doc.items.map(i=>i.taxRate))]; return rates.length===1 ? `（${rates[0]}%）` : ''; })()}</span><span>{formatCurrency(taxAmount)}</span></div>
         <div className="total-row grand"><span>合計金額</span><span>{formatCurrency(total)}</span></div>
       </section>
       <section id="tour-notes" className="toolbar-section">
