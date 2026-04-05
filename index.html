@@ -1286,9 +1286,26 @@ function AuthModal({ onClose, onLogin }) {
             </>
           )}
         </div>
-        <div style={{padding:'0 28px 20px',textAlign:'center'}}>
-          <div style={{fontSize:10,color:'var(--color-text-light)',lineHeight:1.5}}>
-            アカウント登録すると、書類データがクラウドに自動保存され、<br/>どのデバイスからでもアクセスできるようになります。
+        {/* 追加: ログインメリット説明 */}
+        <div style={{padding:'0 28px 20px'}}>
+          <div style={{background:'linear-gradient(135deg,#f0f4ff,#f5f0ff)',border:'1px solid #e0d8f0',borderRadius:10,padding:'14px 16px'}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#1a2744',marginBottom:8,textAlign:'center'}}>📦 ログインするとできること</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {[
+                ['☁️','データをクラウドに自動バックアップ'],
+                ['📱','スマホ・PC・タブレットでデータ共有'],
+                ['🔄','機種変更してもデータが消えない'],
+                ['🔒','ログインしなくても今まで通り使えます'],
+              ].map(([icon, text]) => (
+                <div key={text} style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'#444',lineHeight:1.4}}>
+                  <span style={{fontSize:14,flexShrink:0}}>{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:8,fontSize:10,color:'var(--color-text-light)',textAlign:'center',lineHeight:1.4}}>
+              ※ アカウント登録・ログインは無料です
+            </div>
           </div>
         </div>
       </div>
