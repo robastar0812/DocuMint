@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DocuMint 管理画面</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --color-bg:#0f1523;--color-surface:#1a2238;--color-card:#212b45;
+  --color-border:#2d3a56;--color-border-light:#3a4a6b;
+  --color-text:#e8eaf0;--color-text-muted:#8892a8;--color-text-light:#5a6580;
+  --color-primary:#6c3fd4;--color-primary-light:#8b5cf6;
+  --color-accent:#00d4c8;--color-accent-light:#2de8dc;
+  --color-blue:#2d7cf6;--color-green:#27ae60;--color-red:#e74c3c;--color-yellow:#f59e0b;
+  --font:'Noto Sans JP',sans-serif;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 4px 24px rgba(0,0,0,0.3);
+  --gradient:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);
+}
+html,body,#root{height:100%;}
+body{font-family:var(--font);background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.6;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--color-border-light);border-radius:3px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* レイアウト */
+.admin-layout{min-height:100vh;display:flex;flex-direction:column;}
+.admin-header{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.admin-logo{font-size:20px;font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.admin-logo span{font-size:12px;font-weight:500;-webkit-text-fill-color:var(--color-text-muted);margin-left:8px;}
+.admin-content{flex:1;padding:24px;max-width:1200px;width:100%;margin:0 auto;}
+.admin-user{display:flex;align-items:center;gap:12px;}
+.admin-email{font-size:12px;color:var(--color-text-muted);}
+.admin-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--color-primary);color:white;letter-spacing:.05em;}
+
+/* カード */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:20px;animation:fadeIn .4s ease both;}
+.stat-card:nth-child(2){animation-delay:.05s;}.stat-card:nth-child(3){animation-delay:.1s;}.stat-card:nth-child(4){animation-delay:.15s;}
+.stat-icon{font-size:28px;margin-bottom:8px;}
+.stat-value{font-size:32px;font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-label{font-size:12px;color:var(--color-text-muted);margin-top:2px;letter-spacing:.04em;}
+
+/* テーブル */
+.table-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);overflow:hidden;animation:fadeIn .4s ease .2s both;}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;}
+.table-title{font-size:15px;font-weight:700;}
+.table-count{font-size:11px;color:var(--color-text-muted);background:var(--color-surface);padding:3px 10px;border-radius:99px;}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 16px;font-size:11px;font-weight:600;color:var(--color-text-muted);text-align:left;letter-spacing:.06em;text-transform:uppercase;background:var(--color-surface);border-bottom:1px solid var(--color-border);}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--color-border);color:var(--color-text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(108,63,212,0.05);}
+
+/* バッジ */
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;letter-spacing:.03em;}
+.badge-pro{background:rgba(108,63,212,0.2);color:var(--color-primary-light);}
+.badge-free{background:rgba(90,101,128,0.2);color:var(--color-text-muted);}
+.badge-admin{background:rgba(0,212,200,0.2);color:var(--color-accent);}
+
+/* ボタン */
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:none;border-radius:var(--radius);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-sm{padding:4px 10px;font-size:10px;}
+.btn-pro{background:var(--color-primary);color:white;}.btn-pro:hover{background:var(--color-primary-light);}
+.btn-danger{background:rgba(231,76,60,0.15);color:var(--color-red);}.btn-danger:hover{background:rgba(231,76,60,0.25);}
+.btn-outline{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border);}.btn-outline:hover{border-color:var(--color-text-muted);color:var(--color-text);}
+.btn-back{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border);padding:8px 16px;font-size:12px;border-radius:var(--radius);}
+.btn-back:hover{border-color:var(--color-accent);color:var(--color-accent);}
+
+/* ログイン画面 */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:40px;max-width:400px;width:100%;text-align:center;}
+.login-title{font-size:24px;font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
+.login-subtitle{font-size:13px;color:var(--color-text-muted);margin-bottom:24px;}
+.login-input{width:100%;padding:10px 14px;border:1.5px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface);color:var(--color-text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:12px;transition:border-color .15s;}
+.login-input:focus{border-color:var(--color-primary);}
+.login-input::placeholder{color:var(--color-text-light);}
+.login-btn{width:100%;padding:12px;border:none;border-radius:var(--radius);background:var(--gradient);color:white;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.login-btn:hover{opacity:.9;}
+.login-btn:disabled{opacity:.5;cursor:wait;}
+.login-error{background:rgba(231,76,60,0.15);color:var(--color-red);padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:14px;}
+.login-denied{color:var(--color-red);font-size:13px;margin-top:16px;}
+.loading{text-align:center;padding:60px;color:var(--color-text-muted);animation:pulse 1.5s infinite;}
+
+/* レスポンシブ */
+@media(max-width:768px){
+  .admin-content{padding:16px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stat-card{padding:14px;}
+  .stat-value{font-size:24px;}
+  th,td{padding:8px 10px;font-size:11px;}
+  .table-scroll{overflow-x:auto;}
+  .admin-header{padding:12px 16px;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const SUPABASE_URL = 'https://lbzvzniuqgzpjzccjaal.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ak2WcRZ5u-CVNgSLj8HPKA_cquuQUmB';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==================== ログイン画面 ====================
+function LoginScreen({ onLogin }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async () => {
+    if (!email || !password) { setError('メールアドレスとパスワードを入力してください'); return; }
+    setLoading(true); setError('');
+    const { error: err } = await sb.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (err) setError('ログインに失敗しました: ' + err.message);
+    else onLogin();
+  };
+
+  return (
+    <div className="login-screen">
+      <div className="login-box">
+        <div className="login-title">DocuMint</div>
+        <div className="login-subtitle">管理者ログイン</div>
+        {error && <div className="login-error">{error}</div>}
+        <input className="login-input" type="email" placeholder="メールアドレス" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        <input className="login-input" type="password" placeholder="パスワード" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        <button className="login-btn" onClick={handleLogin} disabled={loading}>
+          {loading ? '⏳ ログイン中...' : '🔐 管理画面にログイン'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ==================== ダッシュボード ====================
+function Dashboard({ user }) {
+  const [profiles, setProfiles] = useState([]);
+  const [userData, setUserData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(null); // null=確認中, true/false
+
+  // 管理者チェック＆データ読込
+  useEffect(() => {
+    (async () => {
+      // 管理者チェック
+      const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', user.id).single();
+      if (!profile || !profile.is_admin) { setIsAdmin(false); setLoading(false); return; }
+      setIsAdmin(true);
+
+      // 全ユーザープロフィール取得
+      const { data: allProfiles } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+      setProfiles(allProfiles || []);
+
+      // 全ユーザーデータ取得
+      const { data: allData } = await sb.from('user_data').select('user_id, templates, saved_docs, updated_at');
+      setUserData(allData || []);
+
+      setLoading(false);
+    })();
+  }, [user]);
+
+  // Pro切り替え
+  const togglePro = async (userId, currentPro) => {
+    await sb.from('profiles').update({ is_pro: !currentPro }).eq('id', userId);
+    setProfiles(p => p.map(u => u.id === userId ? { ...u, is_pro: !currentPro } : u));
+  };
+
+  // ログアウト
+  const handleLogout = async () => {
+    await sb.auth.signOut();
+    window.location.reload();
+  };
+
+  if (loading) return <div className="loading">⏳ 読み込み中...</div>;
+
+  if (isAdmin === false) {
+    return (
+      <div className="login-screen">
+        <div className="login-box">
+          <div className="login-title">DocuMint</div>
+          <div className="login-denied">⛔ 管理者権限がありません</div>
+          <div style={{marginTop:16}}>
+            <button className="btn btn-outline" onClick={handleLogout}>ログアウト</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 統計計算
+  const totalUsers = profiles.length;
+  const proUsers = profiles.filter(u => u.is_pro).length;
+  const totalDocs = userData.reduce((sum, u) => sum + (u.saved_docs?.length || 0), 0);
+  const totalTemplates = userData.reduce((sum, u) => sum + (u.templates?.length || 0), 0);
+
+  // ユーザーデータ結合
+  const mergedUsers = profiles.map(p => {
+    const ud = userData.find(d => d.user_id === p.id);
+    return {
+      ...p,
+      docCount: ud?.saved_docs?.length || 0,
+      templateCount: ud?.templates?.length || 0,
+      lastSync: ud?.updated_at || null,
+    };
+  });
+
+  return (
+    <div className="admin-layout">
+      <header className="admin-header">
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <div className="admin-logo">DocuMint<span>管理画面</span></div>
+        </div>
+        <div className="admin-user">
+          <span className="admin-badge">ADMIN</span>
+          <span className="admin-email">{user.email}</span>
+          <button className="btn btn-outline btn-sm" onClick={handleLogout}>ログアウト</button>
+          <a href="/" className="btn btn-back btn-sm" style={{textDecoration:'none'}}>← アプリに戻る</a>
+        </div>
+      </header>
+
+      <div className="admin-content">
+        {/* 統計カード */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">👥</div>
+            <div className="stat-value">{totalUsers}</div>
+            <div className="stat-label">登録ユーザー</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">⭐</div>
+            <div className="stat-value">{proUsers}</div>
+            <div className="stat-label">有料プラン（Pro）</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">📄</div>
+            <div className="stat-value">{totalDocs}</div>
+            <div className="stat-label">保存書類（合計）</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">📋</div>
+            <div className="stat-value">{totalTemplates}</div>
+            <div className="stat-label">テンプレート（合計）</div>
+          </div>
+        </div>
+
+        {/* ユーザー一覧 */}
+        <div className="table-card">
+          <div className="table-header">
+            <div className="table-title">👤 ユーザー一覧</div>
+            <div className="table-count">{totalUsers}名</div>
+          </div>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>メール</th>
+                  <th>プラン</th>
+                  <th>権限</th>
+                  <th>保存書類</th>
+                  <th>テンプレート</th>
+                  <th>最終同期</th>
+                  <th>登録日</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mergedUsers.map(u => (
+                  <tr key={u.id}>
+                    <td style={{fontWeight:500}}>{u.email}</td>
+                    <td>
+                      <span className={`badge ${u.is_pro ? 'badge-pro' : 'badge-free'}`}>
+                        {u.is_pro ? 'Pro' : 'Free'}
+                      </span>
+                    </td>
+                    <td>
+                      {u.is_admin && <span className="badge badge-admin">Admin</span>}
+                    </td>
+                    <td>{u.docCount}</td>
+                    <td>{u.templateCount}</td>
+                    <td style={{fontSize:11,color:'var(--color-text-muted)'}}>
+                      {u.lastSync ? new Date(u.lastSync).toLocaleDateString('ja-JP') : '—'}
+                    </td>
+                    <td style={{fontSize:11,color:'var(--color-text-muted)'}}>
+                      {new Date(u.created_at).toLocaleDateString('ja-JP')}
+                    </td>
+                    <td>
+                      {!u.is_admin && (
+                        <button
+                          className={`btn btn-sm ${u.is_pro ? 'btn-danger' : 'btn-pro'}`}
+                          onClick={() => togglePro(u.id, u.is_pro)}
+                        >
+                          {u.is_pro ? 'Pro解除' : 'Pro付与'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* フッター */}
+        <div style={{textAlign:'center',padding:'24px 0',fontSize:11,color:'var(--color-text-light)'}}>
+          Copyright © 2026 ROBA★STAR (驢馬星) — DocuMint Admin
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== アプリ ====================
+function App() {
+  const [user, setUser] = useState(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setChecking(false);
+    });
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (checking) return <div className="loading">⏳ 認証確認中...</div>;
+  if (!user) return <LoginScreen onLogin={() => {}} />;
+  return <Dashboard user={user} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
