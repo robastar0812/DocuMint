@@ -18,8 +18,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><!-- 追加: Supabase -->
 <style>
@@ -282,10 +282,12 @@ async function loadSupabaseData(userId) {
 }
 
 // Supabaseデータ保存（追加）
+// 変更: onStart/onDoneコールバック追加（同期インジケーター点滅修正）
 let _saveTimer = null;
-function saveToSupabase(userId, state) {
+function saveToSupabase(userId, state, onStart, onDone) {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
+    if (onStart) onStart(); // 追加: 実際の保存開始時にのみ呼ばれる
     try {
       const payload = {
         user_id: userId,
@@ -297,8 +299,10 @@ function saveToSupabase(userId, state) {
         updated_at: new Date().toISOString(),
       };
       await supabaseClient.from('user_data').upsert(payload, { onConflict: 'user_id' });
+      if (onDone) onDone(true); // 追加: 保存成功
     } catch (e) {
       console.warn('Supabase保存エラー:', e.message);
+      if (onDone) onDone(false); // 追加: 保存失敗
     }
   }, 2000); // 2秒デバウンス
 }
@@ -1167,8 +1171,10 @@ function UpgradeModal({ type, onClose, userEmail /* 追加 */ }) {
           </div>
         </div>
         {/* 比較 */}
+        {/* 修正: ヘッダーを3列に統一（データ行と同じグリッド） */}
         <div style={{margin:'0 24px 20px',border:'1px solid #e5e7eb',borderRadius:12,overflow:'hidden'}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',background:'#f8fafc'}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',background:'#f8fafc'}}>
+            <div style={{padding:'10px',borderRight:'1px solid #e5e7eb',fontSize:12,fontWeight:600,color:'#888'}}></div>
             <div style={{padding:'10px',borderRight:'1px solid #e5e7eb',fontSize:12,fontWeight:600,color:'#888'}}>無料プラン</div>
             <div style={{padding:'10px',fontSize:12,fontWeight:700,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>有料プラン ¥980/月</div>
           </div>
@@ -1939,11 +1945,13 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
   const prevUserId = useRef(null);
+  const isLoadingFromCloud = useRef(false); // 追加: クラウド読込中フラグ（不要な再保存防止）
 
   // === 追加: ログイン時にSupabaseからデータ読込 ===
   useEffect(() => {
     if (!user || user.id === prevUserId.current) return;
     prevUserId.current = user.id;
+    isLoadingFromCloud.current = true; // 追加: 読込中フラグON
     setSyncStatus('syncing');
     loadSupabaseData(user.id).then(({ profile, userData }) => {
       const merged = {};
@@ -1957,18 +1965,28 @@ function App() {
       if (profile) merged.isPro = profile.is_pro || false;
       if (Object.keys(merged).length) loadAll(merged);
       setSyncStatus('synced');
-      setTimeout(() => setSyncStatus(null), 3000);
+      // 追加: state更新が反映された後にフラグ解除（不要な再保存を防止）
+      setTimeout(() => {
+        isLoadingFromCloud.current = false;
+        setSyncStatus(null);
+      }, 1500);
     });
   }, [user]);
 
   // === 追加: 状態変更時にSupabaseへ自動保存 ===
+  // 変更: 読込直後の不要な保存をスキップ＋インジケーターを実際の保存時のみ表示
   useEffect(() => {
     if (!user) return;
-    setSyncStatus('syncing');
-    saveToSupabase(user.id, state);
-    const t = setTimeout(() => setSyncStatus('synced'), 2500);
-    const t2 = setTimeout(() => setSyncStatus(null), 5000);
-    return () => { clearTimeout(t); clearTimeout(t2); };
+    if (isLoadingFromCloud.current) return; // 追加: クラウド読込直後はスキップ
+    saveToSupabase(user.id, state,
+      () => setSyncStatus('syncing'),   // 追加: 実際の保存開始時のみ⏳表示
+      (success) => {                     // 追加: 保存完了時に✅→消去
+        setSyncStatus('synced');
+        setTimeout(() => setSyncStatus(null), 2500);
+      }
+    );
+    // 変更: 不要なsyncStatus制御を削除（コールバックに移動）
+    return () => {};
   }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs]);
 
   // === 追加: ログアウト処理 ===
@@ -2043,6 +2061,11 @@ function App() {
           )}
           Copyright © 2026 ROBA★STAR (驢馬星)
           <br/><a href="/tokushoho.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>特定商取引法に基づく表記</a>
+          {/* 追加: プライバシーポリシー・利用規約リンク */}
+          <span style={{margin:'0 4px',color:'var(--color-text-light)',fontSize:10}}>|</span>
+          <a href="/privacy.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>プライバシーポリシー</a>
+          <span style={{margin:'0 4px',color:'var(--color-text-light)',fontSize:10}}>|</span>
+          <a href="/terms.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>利用規約</a>
         </div>
       </aside>
       <main className={`main-area ${mobileTab==='input'?'hidden':''}`}>
