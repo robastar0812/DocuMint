@@ -1381,9 +1381,14 @@ function Preview({ state }) {
       const t = ev.touches ? ev.touches[0] : ev;
       const pr = previewRef.current?.getBoundingClientRect();
       if (!pr) return null;
+      // スマホのscale変換を考慮して実際のA4サイズで計算
+      const scaleX = pr.width / previewRef.current.offsetWidth;
+      const scaleY = pr.height / previewRef.current.offsetHeight;
+      const adjustedOffsetX = offset.current.x * scaleX;
+      const adjustedOffsetY = offset.current.y * scaleY;
       return {
-        x: Math.max(0, Math.min(85, ((t.clientX - pr.left - offset.current.x) / pr.width) * 100)),
-        y: Math.max(0, Math.min(92, ((t.clientY - pr.top - offset.current.y) / pr.height) * 100)),
+        x: Math.max(0, Math.min(85, ((t.clientX - pr.left - adjustedOffsetX) / pr.width) * 100)),
+        y: Math.max(0, Math.min(92, ((t.clientY - pr.top - adjustedOffsetY) / pr.height) * 100)),
       };
     };
 
@@ -1469,7 +1474,7 @@ function Preview({ state }) {
         {doc.type==='invoice' && myCompany.bankName && (
           <div className="doc-bank">
             <div className="doc-bank-title">お振込先</div>
-            <div className="doc-bank-info">{myCompany.bankName} {myCompany.bankBranch}支店　{myCompany.bankType}　　{myCompany.bankNumber}　　口座名義：{myCompany.bankHolder}</div>
+            <div className="doc-bank-info">{myCompany.bankName}{myCompany.bankName&&!myCompany.bankName.endsWith('銀行')&&!myCompany.bankName.endsWith('信用金庫')&&!myCompany.bankName.endsWith('信金')&&!myCompany.bankName.endsWith('組合')?'銀行':''} {myCompany.bankBranch}{myCompany.bankBranch&&!myCompany.bankBranch.endsWith('支店')?'支店':''}　{myCompany.bankType}　　{myCompany.bankNumber}　　口座名義：{myCompany.bankHolder}</div>
           </div>
         )}
         {doc.notes && <div className="doc-notes"><div className="doc-notes-title">備考</div><div className="doc-notes-body">{doc.notes}</div></div>}
@@ -1630,8 +1635,8 @@ function App() {
   return (
     <div className="app-layout">
       <div className="mobile-tabs">
-        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => setMobileTab('input')}>✏️ 入力</button>
-        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => setMobileTab('preview')}>📄 プレビュー</button>
+        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
+        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
