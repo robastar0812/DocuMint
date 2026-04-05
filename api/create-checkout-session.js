@@ -18,11 +18,14 @@ module.exports = async function handler(req, res) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const priceId = process.env.STRIPE_PRICE_ID;
 
+    // リクエストボディからメールアドレスを取得（追加）
+    const { email } = req.body || {};
+
     // リクエストボディからリダイレクトURLを取得（フォールバック付き）
     const origin = req.headers.origin || req.headers.referer || 'https://docu-mint-two.vercel.app';
     const baseUrl = origin.replace(/\/$/, '');
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
@@ -37,7 +40,14 @@ module.exports = async function handler(req, res) {
       cancel_url: baseUrl + '?checkout=cancel',
       // 日本語ロケール
       locale: 'ja',
-    });
+    };
+
+    // ログイン済みユーザーのメールを紐付け（追加）
+    if (email) {
+      sessionParams.customer_email = email;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return res.status(200).json({ url: session.url });
   } catch (err) {

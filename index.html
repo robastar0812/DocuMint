@@ -1140,7 +1140,7 @@ function InstallModal({ onClose }) {
 
 
 // ==================== 有料プラン誘導モーダル ====================
-function UpgradeModal({ type, onClose }) {
+function UpgradeModal({ type, onClose, userEmail /* 追加 */ }) {
   const typeLabel = type === 'template' ? 'テンプレート' : '保存書類';
   const [loading, setLoading] = useState(false);
 
@@ -1151,6 +1151,7 @@ function UpgradeModal({ type, onClose }) {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail || '' }), // 追加: ユーザーメール送信
       });
       const data = await res.json();
       if (data.url) {
@@ -2031,10 +2032,26 @@ function App() {
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
         </div>
         <div style={{flexShrink:0,padding:'10px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:11,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)'}}>
-          {/* 追加: Pro解約リンク */}
-          {state.isPro && (
+          {/* 追加: Pro解約・プラン管理 */}
+          {state.isPro && user && (
             <div style={{marginBottom:6}}>
-              <button onClick={() => { if(confirm('有料プランを解約しますか？\n解約後も当月末までご利用いただけます。\n\nメールで解約手続きを行います。')) { window.location.href='mailto:robastar359380@gmail.com?subject=DocuMint%20有料プラン解約希望&body=解約を希望します。%0A%0A登録メールアドレス：' + (user?.email||''); } }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'4px 12px',borderRadius:6,fontSize:10,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
+              <button onClick={async () => {
+                try {
+                  const res = await fetch('/api/create-portal-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: user.email }),
+                  });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  } else {
+                    alert('プラン管理ページを開けませんでした。\n' + (data.error || ''));
+                  }
+                } catch (err) {
+                  alert('通信エラーが発生しました。');
+                }
+              }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'4px 12px',borderRadius:6,fontSize:10,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
                 有料プランを解約する
               </button>
             </div>
@@ -2060,7 +2077,7 @@ function App() {
         />
       )}
       {upgradeModal && (
-        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} />
+        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} userEmail={user?.email} />
       )}
       {showInstall && (
         <InstallModal onClose={() => setShowInstall(false)} />
