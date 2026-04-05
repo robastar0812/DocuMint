@@ -247,17 +247,18 @@ function useAppState() {
   const [docSettings, setDocSettingsState] = useState(saved.docSettings || defaultDocSettings);
   const [templates, setTemplates] = useState(saved.templates || []);
   const [savedDocs, setSavedDocs] = useState(saved.savedDocs || []);
+  const [isPro, setIsPro] = useState(saved.isPro || false); // 有料プラン状態
   const [activeModal, setActiveModal] = useState(null);
   const [mobileTab, setMobileTab] = useState('input');
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ myCompany, client, document: doc, docSettings, templates, savedDocs }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ myCompany, client, document: doc, docSettings, templates, savedDocs, isPro }));
     } catch (e) {
       // localStorage容量超過時：古い保管書類を警告
       console.warn('localStorage保存エラー:', e.message);
     }
-  }, [myCompany, client, doc, docSettings, templates, savedDocs]);
+  }, [myCompany, client, doc, docSettings, templates, savedDocs, isPro]);
 
   const setMyCompany = d => setMyCompanyState(p => ({...p,...d}));
   const setClient = d => setClientState(p => ({...p,...d}));
@@ -283,7 +284,7 @@ function useAppState() {
   const loadDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) { setDocState(p => ({...d.document, stampImage: p.stampImage, logoImage: p.logoImage})); setClientState(d.client); } };
   const deleteDoc = id => setSavedDocs(p => p.filter(d=>d.id!==id));
 
-  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, activeModal, setActiveModal, mobileTab, setMobileTab };
+  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab };
 }
 
 // ==================== ユーティリティ ====================
@@ -492,7 +493,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
   );
 }
 
-function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, doc, onShowUpgrade }) {
+function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, doc, onShowUpgrade, isPro }) {
   const FREE_LIMIT = 2;
   const [tab, setTab] = useState('docs');
   const [saveName, setSaveName] = useState('');
@@ -501,7 +502,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
   const handleSave = () => {
     if (!saveName.trim()) return;
     if (mode === 'saveDoc') {
-      if (savedDocs.length >= FREE_LIMIT) {
+      if (!isPro && savedDocs.length >= FREE_LIMIT) {
         setSaveName(''); setMode(null);
         onShowUpgrade && onShowUpgrade('doc');
         return;
@@ -509,7 +510,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       saveDocument(saveName.trim());
     }
     if (mode === 'saveTmpl') {
-      if (templates.length >= FREE_LIMIT) {
+      if (!isPro && templates.length >= FREE_LIMIT) {
         setSaveName(''); setMode(null);
         onShowUpgrade && onShowUpgrade('template');
         return;
@@ -543,16 +544,18 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
             <button className="btn btn-outline btn-sm" onClick={() => { setMode('saveDoc'); setTab('docs'); }}
               style={{position:'relative'}}>
               💾 書類を保管
-              <span style={{marginLeft:6,fontSize:10,color:savedDocs.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
+              {!isPro && <span style={{marginLeft:6,fontSize:10,color:savedDocs.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
                 {savedDocs.length}/{FREE_LIMIT}
-              </span>
+              </span>}
+              {isPro && <span style={{marginLeft:6,fontSize:10,color:'#6c3fd4',fontWeight:700}}>Pro</span>}
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => { setMode('saveTmpl'); setTab('templates'); }}
               style={{position:'relative'}}>
               ＋ テンプレート保存
-              <span style={{marginLeft:6,fontSize:10,color:templates.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
+              {!isPro && <span style={{marginLeft:6,fontSize:10,color:templates.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
                 {templates.length}/{FREE_LIMIT}
-              </span>
+              </span>}
+              {isPro && <span style={{marginLeft:6,fontSize:10,color:'#6c3fd4',fontWeight:700}}>Pro</span>}
             </button>
           </div>
         )}
@@ -1543,7 +1546,7 @@ function Preview({ state }) {
 }
 
 function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
-  const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc } = state;
+  const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
   const [conveniStore, setConveniStore] = useState('seven');
@@ -1634,7 +1637,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
         <div className="section-title">備考</div>
         <textarea className="input" rows={3} placeholder="振込手数料はご負担ください。など" value={doc.notes} onChange={e=>setDocument({notes:e.target.value})} style={{resize:'vertical'}} />
       </section>
-      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} doc={doc} onShowUpgrade={onShowUpgrade} /></div>
+      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} /></div>
       <div id="tour-pdf" className="toolbar-actions">
         <button className="btn btn-primary" onClick={handlePDF}>📥 PDFダウンロード</button>
         <button className="btn btn-outline" onClick={() => window.print()}>🖨️ 印刷</button>
@@ -1679,7 +1682,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall }) {
 
 function App() {
   const state = useAppState();
-  const { activeModal, setActiveModal, mobileTab, setMobileTab, myCompany, setMyCompany, client, setClient, docSettings, setDocSettings } = state;
+  const { activeModal, setActiveModal, mobileTab, setMobileTab, myCompany, setMyCompany, client, setClient, docSettings, setDocSettings, isPro, setIsPro } = state;
   const [tourStep, setTourStep] = useState(null); // null=非表示, 0〜N=ツアー中
   const [upgradeModal, setUpgradeModal] = useState(null); // null | 'template' | 'doc'
   const [showInstall, setShowInstall] = useState(false);
@@ -1690,15 +1693,16 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get('checkout');
     if (checkout === 'success') {
-      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！' });
+      setIsPro(true); // 有料プラン有効化
+      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保管が無制限になりました。' });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
     }
     // URLからクエリパラメータを除去
     if (checkout) {
       window.history.replaceState({}, '', window.location.pathname);
-      // 5秒後に通知を消す
-      setTimeout(() => setCheckoutMsg(null), 5000);
+      // 8秒後に通知を消す
+      setTimeout(() => setCheckoutMsg(null), 8000);
     }
   }, []);
 
