@@ -222,7 +222,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .auth-msg.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
 .auth-msg.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
 .auth-msg.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
-.sync-indicator{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-light);padding:2px 8px;border-radius:99px;background:var(--color-surface);border:1px solid var(--color-border);}
+.sync-indicator{display:inline-flex;align-items:center;justify-content:center;font-size:12px;padding:2px;border-radius:99px;flex-shrink:0;}
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 </style>
@@ -1798,7 +1798,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           <div className="toolbar-logo">DocuMint</div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             {/* 追加: 同期ステータス */}
-            {user && syncStatus && <span className={`sync-indicator ${syncStatus}`}>{syncStatus==='syncing'?'⏳ 同期中':'✅ 同期済'}</span>}
+            {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
             {/* 追加: ログイン/ユーザーボタン */}
             {user ? (
               <div style={{position:'relative'}}>
