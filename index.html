@@ -985,6 +985,29 @@ function InstallModal({ onClose }) {
 // ==================== 有料プラン誘導モーダル ====================
 function UpgradeModal({ type, onClose }) {
   const typeLabel = type === 'template' ? 'テンプレート' : '保管書類';
+  const [loading, setLoading] = useState(false);
+
+  // === Stripe Checkout へリダイレクト ===
+  const handleUpgrade = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('決済ページの作成に失敗しました。\n' + (data.error || ''));
+        setLoading(false);
+      }
+    } catch (err) {
+      alert('通信エラーが発生しました。\nネットワーク接続を確認してください。');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1004,7 +1027,7 @@ function UpgradeModal({ type, onClose }) {
         <div style={{margin:'0 24px 20px',border:'1px solid #e5e7eb',borderRadius:12,overflow:'hidden'}}>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',background:'#f8fafc'}}>
             <div style={{padding:'10px',borderRight:'1px solid #e5e7eb',fontSize:12,fontWeight:600,color:'#888'}}>無料プラン</div>
-            <div style={{padding:'10px',fontSize:12,fontWeight:700,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>有料プラン</div>
+            <div style={{padding:'10px',fontSize:12,fontWeight:700,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>有料プラン ¥980/月</div>
           </div>
           {[
             ['テンプレート', '2件まで', '無制限'],
@@ -1022,10 +1045,11 @@ function UpgradeModal({ type, onClose }) {
         {/* ボタン */}
         <div style={{padding:'0 24px 24px',display:'flex',flexDirection:'column',gap:10}}>
           <button
-            style={{padding:'12px',border:'none',borderRadius:10,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}}
-            onClick={() => { alert('有料プランは近日公開予定です！\nしばらくお待ちください😊'); onClose(); }}
+            style={{padding:'12px',border:'none',borderRadius:10,background: loading ? '#aaa' : 'linear-gradient(90deg,#6c3fd4,#2d7cf6)',color:'white',fontSize:14,fontWeight:700,cursor: loading ? 'wait' : 'pointer',opacity: loading ? 0.7 : 1}}
+            onClick={handleUpgrade}
+            disabled={loading}
           >
-            🚀 有料プランにアップグレード
+            {loading ? '⏳ 決済ページを準備中...' : '🚀 有料プランにアップグレード'}
           </button>
           <button
             style={{padding:'10px',border:'1.5px solid #e5e7eb',borderRadius:10,background:'white',color:'#666',fontSize:13,cursor:'pointer'}}
@@ -1626,6 +1650,24 @@ function App() {
   const [tourStep, setTourStep] = useState(null); // null=非表示, 0〜N=ツアー中
   const [upgradeModal, setUpgradeModal] = useState(null); // null | 'template' | 'doc'
   const [showInstall, setShowInstall] = useState(false);
+  const [checkoutMsg, setCheckoutMsg] = useState(null); // 決済結果通知
+
+  // === Stripe決済後のリダイレクト検知 ===
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get('checkout');
+    if (checkout === 'success') {
+      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！' });
+    } else if (checkout === 'cancel') {
+      setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
+    }
+    // URLからクエリパラメータを除去
+    if (checkout) {
+      window.history.replaceState({}, '', window.location.pathname);
+      // 5秒後に通知を消す
+      setTimeout(() => setCheckoutMsg(null), 5000);
+    }
+  }, []);
 
   const startTour = () => {
     setMobileTab('input'); // スマホの場合は入力タブを表示
@@ -1667,6 +1709,13 @@ function App() {
       )}
       {showInstall && (
         <InstallModal onClose={() => setShowInstall(false)} />
+      )}
+      {/* === 決済結果トースト通知 === */}
+      {checkoutMsg && (
+        <div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',zIndex:9999,padding:'14px 24px',borderRadius:12,boxShadow:'0 8px 32px rgba(0,0,0,0.18)',fontSize:14,fontWeight:600,animation:'slideUp .3s ease',maxWidth:'90vw',textAlign:'center',background:checkoutMsg.type==='success'?'#f0fdf4':'#fefce8',color:checkoutMsg.type==='success'?'#166534':'#854d0e',border:checkoutMsg.type==='success'?'1px solid #bbf7d0':'1px solid #fde68a'}}>
+          {checkoutMsg.text}
+          <button onClick={() => setCheckoutMsg(null)} style={{marginLeft:12,background:'none',border:'none',cursor:'pointer',fontSize:14,color:'inherit',opacity:.6}}>✕</button>
+        </div>
       )}
     </div>
   );
