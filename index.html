@@ -214,6 +214,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .main-area{padding:0!important;display:block!important;}
   .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;}
   .doc-total-box,.doc-total-row.grand,.doc-table thead tr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  #crawler-footer{display:none!important;}/* 追加: 印刷時クローラーフッター非表示 */
   @page{margin:0;size:A4;}
 }
 /* 追加: 認証UI */
@@ -233,22 +234,6 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 </style>
 </head>
 <body>
-<!-- Stripeクローラー対応：静的HTML（React読込後に非表示） -->
-<div id="static-info" style="font-family:'Noto Sans JP',sans-serif;background:#faf8f5;padding:24px 20px;font-size:12px;color:#555;line-height:1.8;max-width:800px;margin:0 auto;">
-  <h1 style="font-size:18px;color:#1a2744;margin-bottom:12px;">DocuMint - 請求書・見積書・領収書作成Webアプリ</h1>
-  <p>DocuMintは、請求書・見積書・領収書をオンラインで作成・管理・PDF出力できるクラウドサービスです。個人事業主・フリーランス・中小企業の方を対象に提供しています。</p>
-  <h2 style="font-size:14px;color:#1a2744;margin:16px 0 8px;">料金プラン</h2>
-  <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
-  <p><strong>有料プラン：</strong>月額980円（税込）- テンプレート・書類保存が無制限。登録時に課金が発生し、毎月同日に自動更新されます。</p>
-  <h2 style="font-size:14px;color:#1a2744;margin:16px 0 8px;">解約について</h2>
-  <p>有料プランはいつでも解約可能です。ログイン後、画面下部の「有料プランを解約する」ボタンから手続きできます。解約は次回更新日の前日までに行ってください。解約後も次回更新日までサービスをご利用いただけます。日割り返金は行っておりません。</p>
-  <p style="margin-top:16px;padding-top:12px;border-top:1px solid #d4cfc6;font-size:11px;color:#9b9590;">
-    販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜robastar359380@gmail.com<br>
-    <a href="/tokushoho.html" style="color:#6c3fd4;">特定商取引法に基づく表記</a>｜
-    <a href="/privacy.html" style="color:#6c3fd4;">プライバシーポリシー</a>｜
-    <a href="/terms.html" style="color:#6c3fd4;">利用規約</a>
-  </p>
-</div>
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useRef, useCallback, useEffect } = React;
@@ -2099,12 +2084,15 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
-<!-- 固定フッター：常時表示（Stripe審査必須） -->
-<div style="position:fixed;bottom:0;left:0;right:0;background:#1a2744;padding:6px 16px;font-family:'Noto Sans JP',sans-serif;font-size:10px;color:rgba(255,255,255,0.7);text-align:center;z-index:9999;line-height:1.6;">
-  DocuMint｜販売事業者：間宮 洋一｜月額980円（税込）｜
-  <a href="/tokushoho.html" style="color:#00d4c8;text-decoration:underline;">特定商取引法に基づく表記</a>｜
-  <a href="/privacy.html" style="color:#00d4c8;text-decoration:underline;">プライバシーポリシー</a>｜
-  <a href="/terms.html" style="color:#00d4c8;text-decoration:underline;">利用規約</a>
+<!-- クローラー用フッター（app-layoutのheight:100vhにより画面外・印刷時も非表示） -->
+<div id="crawler-footer" style="font-family:'Noto Sans JP',sans-serif;font-size:12px;color:#555;line-height:1.8;padding:24px 20px;max-width:800px;margin:0 auto;">
+  <h2 style="font-size:15px;color:#1a2744;margin-bottom:12px;">DocuMint - 請求書・見積書・領収書作成Webアプリ</h2>
+  <p>DocuMintは、請求書・見積書・領収書をオンラインで作成・管理・PDF出力できるクラウドサービスです。個人事業主・フリーランス・中小企業の方を対象に提供しています。</p>
+  <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
+  <p><strong>有料プラン：</strong>月額980円（税込）- テンプレート・書類保存が無制限。登録時に課金が発生し、毎月同日に自動更新されます。</p>
+  <p>有料プランはいつでも解約可能です。ログイン後、画面下部の「有料プランを解約する」ボタンから手続きできます。解約は次回更新日の前日までに行ってください。</p>
+  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜robastar359380@gmail.com</p>
+  <a href="/tokushoho.html">特定商取引法に基づく表記</a>｜<a href="/privacy.html">プライバシーポリシー</a>｜<a href="/terms.html">利用規約</a>
 </div>
 </body>
 </html>
