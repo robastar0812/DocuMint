@@ -1616,7 +1616,7 @@ function HelpModal({ onClose }) {
   }, [activeSection, isMobile]);
 
   return (
-    <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
+    <div className="modal-overlay" style={isMobile?{padding:0}:{}} onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
       <div className="modal-box" style={{maxWidth:isMobile?'100vw':680,width:isMobile?'100vw':'95vw',maxHeight:isMobile?'100vh':'90vh',borderRadius:isMobile?0:'var(--radius-xl)'}}>
         <div className="modal-header"><div className="modal-title">📖 操作説明</div><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
