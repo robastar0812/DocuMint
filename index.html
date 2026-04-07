@@ -2141,10 +2141,10 @@ function App() {
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
         </div>
-        <div style={{flexShrink:0,padding:'10px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:11,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)'}}>
+        <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
           {/* 追加: Pro解約・プラン管理 */}
           {state.isPro && user && (
-            <div style={{marginBottom:6}}>
+            <div style={{marginBottom:4}}>
               <button onClick={async () => {
                 try {
                   const res = await fetch('/api/create-portal-session', {
@@ -2161,18 +2161,15 @@ function App() {
                 } catch (err) {
                   alert('通信エラーが発生しました。');
                 }
-              }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'4px 12px',borderRadius:6,fontSize:10,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
+              }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'3px 10px',borderRadius:6,fontSize:9,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
                 有料プランを解約する
               </button>
             </div>
           )}
-          Copyright © 2026 ROBA★STAR (驢馬星)
-          <br/><a href="/tokushoho.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>特定商取引法に基づく表記</a>
-          {/* 追加: プライバシーポリシー・利用規約リンク */}
-          <span style={{margin:'0 4px',color:'var(--color-text-light)',fontSize:10}}>|</span>
-          <a href="/privacy.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>プライバシーポリシー</a>
-          <span style={{margin:'0 4px',color:'var(--color-text-light)',fontSize:10}}>|</span>
-          <a href="/terms.html" style={{color:'var(--color-text-light)',fontSize:10,textDecoration:'underline'}}>利用規約</a>
+          © 2026 ROBA★STAR (驢馬星)
+          <span style={{margin:'0 4px'}}>|</span><a href="/tokushoho.html" style={{color:'var(--color-text-light)',textDecoration:'underline'}}>特商法</a>
+          <span style={{margin:'0 4px'}}>|</span><a href="/privacy.html" style={{color:'var(--color-text-light)',textDecoration:'underline'}}>プライバシー</a>
+          <span style={{margin:'0 4px'}}>|</span><a href="/terms.html" style={{color:'var(--color-text-light)',textDecoration:'underline'}}>利用規約</a>
         </div>
       </aside>
       <main className={`main-area ${mobileTab==='input'?'hidden':''}`}>
