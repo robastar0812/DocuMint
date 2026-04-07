@@ -247,6 +247,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 function useAuth() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authEvent, setAuthEvent] = useState(null); /* 追加: 認証イベント検知（パスワードリセット等） */
 
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
@@ -255,6 +256,7 @@ function useAuth() {
     });
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (_event === 'PASSWORD_RECOVERY') setAuthEvent('PASSWORD_RECOVERY'); /* 追加 */
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -263,8 +265,9 @@ function useAuth() {
   const signUp = (email, password) => supabaseClient.auth.signUp({ email, password });
   const signOut = () => supabaseClient.auth.signOut();
   const resetPassword = (email) => supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  const updatePassword = (newPassword) => supabaseClient.auth.updateUser({ password: newPassword }); /* 追加 */
 
-  return { user, authLoading, signIn, signUp, signOut, resetPassword };
+  return { user, authLoading, signIn, signUp, signOut, resetPassword, updatePassword, authEvent, setAuthEvent /* 追加 */ };
 }
 
 // Supabaseデータ読込（追加）
@@ -347,6 +350,7 @@ function useAppState() {
     } catch (e) {
       // localStorage容量超過時：古い保存書類を警告
       console.warn('localStorage保存エラー:', e.message);
+      if (e.name === 'QuotaExceededError' || e.code === 22) alert('⚠️ 端末の保存容量が上限に達しました。\n不要な保存書類やテンプレートを削除してください。\nログインするとクラウドに保存されます。'); /* 追加: ユーザー通知 */
     }
   }, [myCompany, client, doc, docSettings, templates, savedDocs, isPro]);
 
@@ -1129,12 +1133,17 @@ function InstallModal({ onClose }) {
 
 
 // ==================== 有料プラン誘導モーダル ====================
-function UpgradeModal({ type, onClose, userEmail /* 追加 */ }) {
+function UpgradeModal({ type, onClose, userEmail, onRequireLogin /* 追加: ログイン必須化 */ }) {
   const typeLabel = type === 'template' ? 'テンプレート' : '保存書類';
   const [loading, setLoading] = useState(false);
 
   // === Stripe Checkout へリダイレクト ===
   const handleUpgrade = async () => {
+    // 追加: 未ログイン時はログインを促す
+    if (!userEmail) {
+      if (onRequireLogin) onRequireLogin();
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/create-checkout-session', {
@@ -1330,6 +1339,62 @@ function AuthModal({ onClose, onLogin }) {
               ※ アカウント登録・ログインは無料です
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+// ================================================================
+
+// ==================== パスワード再設定モーダル（追加） ====================
+function PasswordResetModal({ onClose, updatePassword }) {
+  const [newPass, setNewPass] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const handleSubmit = async () => {
+    if (!newPass || !confirm) { setMsg({type:'error',text:'両方のフィールドを入力してください'}); return; }
+    if (newPass.length < 6) { setMsg({type:'error',text:'パスワードは6文字以上にしてください'}); return; }
+    if (newPass !== confirm) { setMsg({type:'error',text:'パスワードが一致しません'}); return; }
+    setLoading(true); setMsg(null);
+    const { error } = await updatePassword(newPass);
+    setLoading(false);
+    if (error) {
+      setMsg({type:'error',text: error.message});
+    } else {
+      setMsg({type:'success',text:'✅ パスワードを更新しました！このままご利用いただけます。'});
+      setTimeout(() => onClose(), 3000);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
+        onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
+      <div className="modal-box" style={{maxWidth:420}}>
+        <div className="modal-header">
+          <div className="modal-title">🔐 新しいパスワードを設定</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div style={{fontSize:13,color:'var(--color-text-muted)',marginBottom:16,lineHeight:1.6}}>
+            パスワードリセットのリンクから来ました。<br/>新しいパスワードを入力してください。
+          </div>
+          {msg && <div className={`auth-msg ${msg.type}`}>{msg.text}</div>}
+          <div className="form-group">
+            <label className="form-label">新しいパスワード（6文字以上）</label>
+            <input className="input" type="password" placeholder="••••••" value={newPass} onChange={e=>setNewPass(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSubmit()} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">パスワード確認（もう一度入力）</label>
+            <input className="input" type="password" placeholder="••••••" value={confirm} onChange={e=>setConfirm(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSubmit()} />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? '⏳ 更新中...' : '🔐 パスワードを更新'}
+          </button>
         </div>
       </div>
     </div>
@@ -1869,6 +1934,12 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',justifyContent:'center'}}><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:16,height:16,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
         </div>
       </div>
+      {/* 追加: 有料プランへのアップグレードバナー（無料ユーザーのみ表示） */}
+      {!isPro && (
+        <button onClick={() => onShowUpgrade('doc')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,width:'100%',padding:'7px 12px',border:'none',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8)',color:'white',fontSize:12,fontWeight:600,cursor:'pointer',letterSpacing:'.03em'}}>
+          ✨ 有料プラン（月額¥980）でテンプレート・書類保存が無制限に →
+        </button>
+      )}
       <div id="tour-doc-tabs" className="doc-type-tabs">
         {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => setDocumentType(k)}>{v}</button>)}
       </div>
@@ -1967,7 +2038,7 @@ function App() {
   const [checkoutMsg, setCheckoutMsg] = useState(null); // 決済結果通知
 
   // === 追加: 認証状態 ===
-  const { user, authLoading, signOut } = useAuth();
+  const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
   const [showAuth, setShowAuth] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
   const prevUserId = useRef(null);
@@ -2045,6 +2116,16 @@ function App() {
     }
   }, []);
 
+  // === 追加: メール確認成功時のトースト表示 ===
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=signup')) {
+      setCheckoutMsg({ type: 'success', text: '✅ メール認証が完了しました！ログイン済みです。' });
+      setTimeout(() => setCheckoutMsg(null), 6000);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const startTour = () => {
     setMobileTab('input'); // スマホの場合は入力タブを表示
     setTourStep(0);
@@ -2111,7 +2192,7 @@ function App() {
         />
       )}
       {upgradeModal && (
-        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} userEmail={user?.email} />
+        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} userEmail={user?.email} onRequireLogin={() => { setUpgradeModal(null); setShowAuth(true); }} />
       )}
       {showInstall && (
         <InstallModal onClose={() => setShowInstall(false)} />
@@ -2119,6 +2200,10 @@ function App() {
       {/* 追加: 認証モーダル */}
       {showAuth && (
         <AuthModal onClose={() => setShowAuth(false)} onLogin={() => setShowAuth(false)} />
+      )}
+      {/* 追加: パスワード再設定モーダル（リセットメールのリンクから来た時に自動表示） */}
+      {authEvent === 'PASSWORD_RECOVERY' && (
+        <PasswordResetModal onClose={() => setAuthEvent(null)} updatePassword={updatePassword} />
       )}
       {/* === 決済結果トースト通知 === */}
       {checkoutMsg && (
@@ -2134,7 +2219,7 @@ function App() {
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 <!-- クローラー用フッター（app-layoutのheight:100vhにより画面外・印刷時も非表示） -->
-<div id="crawler-footer" style="font-family:'Noto Sans JP',sans-serif;font-size:12px;color:#555;line-height:1.8;padding:24px 20px;max-width:800px;margin:0 auto;">
+<div id="crawler-footer" style="position:absolute;left:-9999px;overflow:hidden;height:1px;width:1px;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:#555;line-height:1.8;padding:24px 20px;max-width:800px;margin:0 auto;">
   <h2 style="font-size:15px;color:#1a2744;margin-bottom:12px;">DocuMint - 請求書・見積書・領収書作成Webアプリ</h2>
   <p>DocuMintは、請求書・見積書・領収書をオンラインで作成・管理・PDF出力できるクラウドサービスです。個人事業主・フリーランス・中小企業の方を対象に提供しています。</p>
   <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
