@@ -1925,20 +1925,24 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     if (!el) { window.print(); return; }
     if (typeof html2pdf === 'undefined') { window.print(); return; }
     setPdfLoading(true); /* 追加 */
-    /* 追加: スマホのscale変換を一時解除してPDF生成（グレー余白防止） */
+    /* 修正: スマホのscale変換を一時解除＋min-heightリセットでPDF1ページ化を確実にする */
     el.style.transform = 'none';
     el.style.marginBottom = '0';
-    el.style.height = '1122px'; /* 追加: A4高さ固定（1123px=297.09mm>A4→2ページ化防止のため1122px=296.83mm） */
-    el.style.overflow = 'hidden'; /* 追加: はみ出し防止 */
-    const restore = () => { el.style.transform = ''; el.style.marginBottom = ''; el.style.height = ''; el.style.overflow = ''; setPdfLoading(false); }; /* 追加: 復元関数 */
+    el.style.minHeight = '0';        /* 修正追加: CSSのmin-height:1123pxを無効化（これが2ページ化の根本原因） */
+    el.style.height = '1122px';      /* A4高さ固定（794px/1122px = 210mm/296.8mm < A4の297mm） */
+    el.style.maxHeight = '1122px';   /* 修正追加: コンテンツはみ出し時も1122px以下に制限 */
+    el.style.overflow = 'hidden';
+    el.style.borderRadius = '0';     /* 修正追加: 角丸がキャプチャに影響するのを防止 */
+    el.style.boxShadow = 'none';     /* 修正追加: 影がキャプチャ領域を拡大するのを防止 */
+    const restore = () => { el.style.transform = ''; el.style.marginBottom = ''; el.style.minHeight = ''; el.style.height = ''; el.style.maxHeight = ''; el.style.overflow = ''; el.style.borderRadius = ''; el.style.boxShadow = ''; setPdfLoading(false); };
     const opt = {
       margin: 0,
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, windowWidth: 794 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, height: 1122, windowWidth: 794, windowHeight: 1122 }, /* 修正: height/windowHeight追加でキャプチャ領域を厳密にA4以内に制限 */
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(el).save().then(restore).catch(restore); /* 変更: finally相当の処理 */
+    html2pdf().set(opt).from(el).save().then(restore).catch(restore);
   };
 
   return (
@@ -2157,6 +2161,9 @@ function App() {
     if (checkoutDone && user) {
       supabaseClient.from('profiles').update({ is_pro: true }).eq('id', user.id).then(() => {
         setCheckoutDone(false); /* 更新完了→フラグ解除 */
+      }).catch(() => {
+        setCheckoutDone(false); /* 修正追加: エラー時もフラグ解除（無限ループ防止） */
+        console.warn('Supabase is_pro更新に失敗しました。Webhookでリカバリーされます。');
       });
     }
   }, [checkoutDone, user]);
