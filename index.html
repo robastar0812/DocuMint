@@ -234,9 +234,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.pro-marquee{overflow:hidden;white-space:nowrap;cursor:pointer;border:none;width:100%;padding:7px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
-.pro-marquee-track{display:inline-flex;will-change:transform;animation:marquee 25s linear infinite;}
-.pro-marquee-track span{flex-shrink:0;padding-right:50px;font-size:11px;font-weight:600;color:white;letter-spacing:.03em;}
+.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:7px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
+.pro-marquee-track{display:flex;width:max-content;will-change:transform;animation:marquee 25s linear infinite;}
+.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:11px;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
 </head>
 <body>
