@@ -234,9 +234,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:7px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
-.pro-marquee-track{display:flex;width:max-content;will-change:transform;animation:marquee 25s linear infinite;}
-.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:11px;font-weight:600;color:white;letter-spacing:.03em;}
+.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:10px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
+.pro-marquee-track{display:flex;align-items:center;width:max-content;will-change:transform;animation:marquee 25s linear infinite;}
+.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:11px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
 </head>
 <body>
@@ -771,7 +771,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                     </div>
                     <div className="history-item-actions">
                       <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
-                      <button className="btn btn-ghost btn-sm" title="複製" onClick={() => handleDuplicate(d.id)} style={{fontSize:14,padding:'4px 6px'}}>📋</button>
+                      <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
                       <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
                     </div>
                   </div>
@@ -785,7 +785,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </div>
                 <div className="history-item-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
-                  <button className="btn btn-ghost btn-sm" title="複製" onClick={() => handleDuplicate(d.id)} style={{fontSize:14,padding:'4px 6px'}}>📋</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
                   <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
                 </div>
               </div>
@@ -1568,7 +1568,7 @@ const TOUR_STEPS = [
   {
     id: 'tour-history',
     title: '⑩ 書類を保存・テンプレート',
-    desc: '作成した書類を名前をつけて保存できます。後から呼び出して編集も可能です。よく使う明細パターンはテンプレートとして保存しておくと次回から一発で呼び出せます。',
+    desc: '作成した書類を名前をつけて保存できます。📄複製ボタンでコピーも作れます。有料プランなら🔍検索・タイプフィルター・📅月別整理も使えます。テンプレートは明細パターンを保存して次回から一発呼び出しできます。',
   },
   {
     id: 'tour-pdf',
@@ -1765,8 +1765,10 @@ function HelpModal({ onClose }) {
     ]},
     {id:'save',title:'💾 書類を保存・管理する',content:[
       {step:'① 書類を保存する',desc:'サイドバーを下にスクロールして「💾 書類を保存」ボタンをクリックします。',detail:'書類名を入力してEnterキーまたは「保存」ボタンを押します。'},
-      {step:'② テンプレートを保存する',desc:'「＋ テンプレート保存」ボタンをクリックします。',detail:'よく使う明細をテンプレートとして保存できます。'},
-      {step:'③ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保存していない書類は消えますのでご注意ください。'},
+      {step:'② 書類を複製する',desc:'保存書類の「📄複製」ボタンをクリックします。',detail:'同じ内容の書類が「（コピー）」付きで複製されます。先月の請求書を流用したい時に便利です。'},
+      {step:'③ テンプレートを保存する',desc:'「＋ テンプレート保存」ボタンをクリックします。',detail:'よく使う明細をテンプレートとして保存できます。'},
+      {step:'④ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保存していない書類は消えますのでご注意ください。'},
+      {step:'⑤ 検索・フィルター（有料プラン）',desc:'書類が3件以上になると検索バーとタイプフィルターが表示されます。',detail:'書類名で検索したり、請求書・領収書・見積書でフィルタリングできます。5件以上で月別グループ表示になります。'},
     ]},
     {id:'output',title:'📥 PDF・印刷・コンビニ印刷',content:[
       {step:'① PDFダウンロード',desc:'「📥 PDFダウンロード」ボタンをクリックします。',detail:'A4サイズのPDFファイルがダウンロードされます。'},
