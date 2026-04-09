@@ -2132,15 +2132,13 @@ function App() {
   };
 
   // === Stripe決済後のリダイレクト検知 ===
+  const [checkoutDone, setCheckoutDone] = useState(false); /* 追加: 決済成功フラグ */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get('checkout');
     if (checkout === 'success') {
       setIsPro(true); // 有料プラン有効化
-      // 追加: ログイン中ならSupabaseのprofilesも更新
-      if (user) {
-        supabaseClient.from('profiles').update({ is_pro: true }).eq('id', user.id).then(() => {});
-      }
+      setCheckoutDone(true); /* 追加: フラグ保持（user読込待ち用） */
       setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保存が無制限になりました。' });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
@@ -2152,6 +2150,15 @@ function App() {
       setTimeout(() => setCheckoutMsg(null), 8000);
     }
   }, []);
+
+  // === 追加: user読込完了後にSupabaseのis_proを更新 ===
+  useEffect(() => {
+    if (checkoutDone && user) {
+      supabaseClient.from('profiles').update({ is_pro: true }).eq('id', user.id).then(() => {
+        setCheckoutDone(false); /* 更新完了→フラグ解除 */
+      });
+    }
+  }, [checkoutDone, user]);
 
   // === 追加: メール確認成功時のトースト表示 ===
   useEffect(() => {
@@ -2264,4 +2271,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </div>
 </body>
 </html>
- 
