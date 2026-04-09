@@ -233,8 +233,10 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* 追加: Pro宣伝マーキー */
-@keyframes marquee{0%{transform:translateX(0%)}100%{transform:translateX(-50%)}}
-.pro-marquee{overflow:hidden;white-space:nowrap;cursor:pointer;border:none;width:100%;padding:6px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.pro-marquee{overflow:hidden;white-space:nowrap;cursor:pointer;border:none;width:100%;padding:7px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
+.pro-marquee-track{display:inline-flex;will-change:transform;animation:marquee 25s linear infinite;}
+.pro-marquee-track span{flex-shrink:0;padding-right:50px;font-size:11px;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
 </head>
 <body>
@@ -2063,17 +2065,17 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
       {!isPro && (
         <div className="pro-marquee" onClick={() => onShowUpgrade('upgrade')}>
-          <div style={{display:'inline-block',animation:'marquee 20s linear infinite'}}>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>✨ 月額¥500で書類保存・テンプレートが無制限</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>🔍 Proなら書類検索＆タイプフィルターが使える</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📋 書類の複製ワンタップ！ 先月の請求書を一瞬でコピー</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📂 月別自動整理で大量の書類もスッキリ管理</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>✨ 月額¥500で書類保存・テンプレートが無制限</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>🔍 Proなら書類検索＆タイプフィルターが使える</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📋 書類の複製ワンタップ！ 先月の請求書を一瞬でコピー</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📂 月別自動整理で大量の書類もスッキリ管理</span>
-            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
+          <div className="pro-marquee-track">
+            <span>✨ 月額¥500で書類保存・テンプレートが無制限</span>
+            <span>🔍 Proなら書類検索＆タイプフィルターが使える</span>
+            <span>📋 書類の複製ワンタップ！先月の請求書を一瞬でコピー</span>
+            <span>📂 月別自動整理で大量の書類もスッキリ管理</span>
+            <span>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
+            <span>✨ 月額¥500で書類保存・テンプレートが無制限</span>
+            <span>🔍 Proなら書類検索＆タイプフィルターが使える</span>
+            <span>📋 書類の複製ワンタップ！先月の請求書を一瞬でコピー</span>
+            <span>📂 月別自動整理で大量の書類もスッキリ管理</span>
+            <span>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
           </div>
         </div>
       )}
