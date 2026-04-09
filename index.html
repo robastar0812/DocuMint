@@ -2097,8 +2097,8 @@ function App() {
         if (userData.my_company && Object.keys(userData.my_company).length) merged.myCompany = userData.my_company;
         if (userData.client_data && Object.keys(userData.client_data).length) merged.client = userData.client_data;
         if (userData.doc_settings && Object.keys(userData.doc_settings).length) merged.docSettings = userData.doc_settings;
-        if (userData.templates && userData.templates.length) merged.templates = userData.templates;
-        if (userData.saved_docs && userData.saved_docs.length) merged.savedDocs = userData.saved_docs;
+        if (Array.isArray(userData.templates)) merged.templates = userData.templates; /* 修正: 0件でもクラウドのデータで上書き（旧: .lengthチェックで空配列が無視されていた） */
+        if (Array.isArray(userData.saved_docs)) merged.savedDocs = userData.saved_docs; /* 修正: 同上 */
       }
       if (profile) merged.isPro = profile.is_pro || false;
       if (Object.keys(merged).length) loadAll(merged);
