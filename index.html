@@ -232,6 +232,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator{display:inline-flex;align-items:center;justify-content:center;font-size:12px;padding:2px;border-radius:99px;flex-shrink:0;}
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
+/* 追加: Pro宣伝マーキー */
+@keyframes marquee{0%{transform:translateX(0%)}100%{transform:translateX(-50%)}}
+.pro-marquee{overflow:hidden;white-space:nowrap;cursor:pointer;border:none;width:100%;padding:6px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);}
 </style>
 </head>
 <body>
@@ -402,6 +405,8 @@ function useAppState() {
   });
   const loadDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) { setDocState(p => ({...d.document, stampImage: p.stampImage, logoImage: p.logoImage})); setClientState(d.client); } };
   const deleteDoc = id => setSavedDocs(p => p.filter(d=>d.id!==id));
+  // 追加: 書類複製機能（既存データ構造そのまま・IDと日時だけ新規）
+  const duplicateDocument = id => { const d = savedDocs.find(d=>d.id===id); if(d) setSavedDocs(p => [...p, {...d, id:Date.now(), name:d.name+'（コピー）', savedAt:new Date().toISOString()}]); };
 
   // 追加: Supabaseからの一括読込
   const loadAll = (data) => {
@@ -413,7 +418,7 @@ function useAppState() {
     if (typeof data.isPro === 'boolean') setIsPro(data.isPro);
   };
 
-  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab, loadAll /* 追加 */ };
+  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab, loadAll /* 追加 */ };
 }
 
 // ==================== ユーティリティ ====================
@@ -622,11 +627,15 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
   );
 }
 
-function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, doc, onShowUpgrade, isPro }) {
+function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, doc, onShowUpgrade, isPro }) {
   const FREE_LIMIT = 2;
   const [tab, setTab] = useState('docs');
   const [saveName, setSaveName] = useState('');
   const [mode, setMode] = useState(null);
+  /* 追加: 検索・フィルター・折りたたみ */
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all'); // 'all'|'invoice'|'receipt'|'estimate'
+  const [collapsed, setCollapsed] = useState({}); // { '2026年4月': true } 月別折りたたみ
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -649,15 +658,53 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
     setSaveName(''); setMode(null);
   };
 
+  /* 追加: 複製ハンドラ（無料制限チェック付き） */
+  const handleDuplicate = id => {
+    if (!isPro && savedDocs.length >= FREE_LIMIT) {
+      onShowUpgrade && onShowUpgrade('doc');
+      return;
+    }
+    duplicateDocument(id);
+  };
+
   const fmtDate = iso => { const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+  /* 追加: 月ラベル生成 */
+  const getMonthLabel = iso => { const d=new Date(iso); return `${d.getFullYear()}年${d.getMonth()+1}月`; };
+
+  /* 追加: 書類フィルタリング */
+  const filteredDocs = [...savedDocs].reverse().filter(d => {
+    if (typeFilter !== 'all' && d.type !== typeFilter) return false;
+    if (search && !d.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  /* 追加: テンプレートフィルタリング */
+  const filteredTemplates = [...templates].reverse().filter(t => {
+    if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  /* 追加: 月別グループ化 */
+  const groupByMonth = items => {
+    const groups = {};
+    items.forEach(item => {
+      const key = getMonthLabel(item.savedAt || item.createdAt);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    return groups;
+  };
+
+  const toggleMonth = key => setCollapsed(p => ({...p, [key]: !p[key]}));
 
   return (
     <div className="history-panel">
       <div className="history-tabs">
-        <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => setTab('docs')}>
+        <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => { setTab('docs'); setSearch(''); setTypeFilter('all'); }}>
           📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
         </button>
-        <button className={`htab ${tab==='templates'?'active':''}`} onClick={() => setTab('templates')}>
+        <button className={`htab ${tab==='templates'?'active':''}`} onClick={() => { setTab('templates'); setSearch(''); }}>
           📋 テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
         </button>
       </div>
@@ -689,10 +736,46 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
           </div>
         )}
       </div>
+      {/* 追加: 検索バー（3件以上で表示） */}
+      {((tab==='docs' && savedDocs.length >= 3) || (tab==='templates' && templates.length >= 3)) && (
+        <div style={{padding:'8px 16px',borderBottom:'1px solid var(--color-border)'}}>
+          <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px'}} />
+        </div>
+      )}
+      {/* 追加: タイプフィルター（書類タブかつ3件以上で表示） */}
+      {tab==='docs' && savedDocs.length >= 3 && (
+        <div style={{padding:'6px 16px',borderBottom:'1px solid var(--color-border)',display:'flex',gap:4,flexWrap:'wrap'}}>
+          {[['all','全て'],['invoice','請求書'],['receipt','領収書'],['estimate','見積書']].map(([k,v]) => (
+            <button key={k} onClick={() => setTypeFilter(k)} style={{padding:'3px 10px',borderRadius:99,border:'1px solid',borderColor:typeFilter===k?'var(--color-primary)':'var(--color-border)',background:typeFilter===k?'var(--color-primary)':'transparent',color:typeFilter===k?'white':'var(--color-text-muted)',fontSize:11,fontWeight:typeFilter===k?700:400,cursor:'pointer',fontFamily:'var(--font-sans)'}}>{v}</button>
+          ))}
+        </div>
+      )}
       {tab === 'docs' && (
         <div className="history-list">
           {savedDocs.length === 0 ? <div className="history-empty">保存した書類はありません</div> :
-            [...savedDocs].reverse().map(d => (
+           filteredDocs.length === 0 ? <div className="history-empty">該当する書類はありません</div> :
+            /* 追加: 5件以上は月別グループ表示、それ以下はフラット表示 */
+            savedDocs.length >= 5 ? Object.entries(groupByMonth(filteredDocs)).map(([month, items]) => (
+              <div key={month}>
+                <button onClick={() => toggleMonth(month)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 16px',border:'none',borderBottom:'1px solid var(--color-border)',background:'var(--color-surface)',cursor:'pointer',fontFamily:'var(--font-sans)',fontSize:11,fontWeight:700,color:'var(--color-text-muted)',letterSpacing:'.04em'}}>
+                  <span>{month}（{items.length}件）</span>
+                  <span style={{fontSize:10,transform:collapsed[month]?'rotate(0deg)':'rotate(180deg)',transition:'transform .2s'}}>▼</span>
+                </button>
+                {!collapsed[month] && items.map(d => (
+                  <div key={d.id} className="history-item">
+                    <div className="history-item-info">
+                      <div className="history-item-name">{d.name}</div>
+                      <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
+                    </div>
+                    <div className="history-item-actions">
+                      <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                      <button className="btn btn-ghost btn-sm" title="複製" onClick={() => handleDuplicate(d.id)} style={{fontSize:14,padding:'4px 6px'}}>📋</button>
+                      <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )) : filteredDocs.map(d => (
               <div key={d.id} className="history-item">
                 <div className="history-item-info">
                   <div className="history-item-name">{d.name}</div>
@@ -700,6 +783,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </div>
                 <div className="history-item-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                  <button className="btn btn-ghost btn-sm" title="複製" onClick={() => handleDuplicate(d.id)} style={{fontSize:14,padding:'4px 6px'}}>📋</button>
                   <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
                 </div>
               </div>
@@ -710,7 +794,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       {tab === 'templates' && (
         <div className="history-list">
           {templates.length === 0 ? <div className="history-empty">保存したテンプレートはありません</div> :
-            [...templates].reverse().map(t => (
+           filteredTemplates.length === 0 ? <div className="history-empty">該当するテンプレートはありません</div> :
+            filteredTemplates.map(t => (
               <div key={t.id} className="history-item">
                 <div className="history-item-info">
                   <div className="history-item-name">{t.name}</div>
@@ -1903,7 +1988,7 @@ function Preview({ state }) {
 }
 
 function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus /* 追加 */ }) {
-  const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, isPro } = state;
+  const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
   const [conveniStore, setConveniStore] = useState('seven');
@@ -1975,11 +2060,22 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',justifyContent:'center'}}><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:16,height:16,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
         </div>
       </div>
-      {/* 追加: 有料プランへのアップグレードバナー（無料ユーザーのみ表示） */}
+      {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
       {!isPro && (
-        <button onClick={() => onShowUpgrade('upgrade')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,width:'100%',padding:'7px 12px',border:'none',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8)',color:'white',fontSize:12,fontWeight:600,cursor:'pointer',letterSpacing:'.03em'}}>
-          ✨ 有料プラン（月額¥500）でテンプレート・書類保存が無制限に →
-        </button>
+        <div className="pro-marquee" onClick={() => onShowUpgrade('upgrade')}>
+          <div style={{display:'inline-block',animation:'marquee 20s linear infinite'}}>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>✨ 月額¥500で書類保存・テンプレートが無制限</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>🔍 Proなら書類検索＆タイプフィルターが使える</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📋 書類の複製ワンタップ！ 先月の請求書を一瞬でコピー</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📂 月別自動整理で大量の書類もスッキリ管理</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>✨ 月額¥500で書類保存・テンプレートが無制限</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>🔍 Proなら書類検索＆タイプフィルターが使える</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📋 書類の複製ワンタップ！ 先月の請求書を一瞬でコピー</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>📂 月別自動整理で大量の書類もスッキリ管理</span>
+            <span style={{display:'inline-block',paddingRight:60,fontSize:11,fontWeight:600,color:'white',letterSpacing:'.03em'}}>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
+          </div>
+        </div>
       )}
       <div id="tour-doc-tabs" className="doc-type-tabs">
         {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => setDocumentType(k)}>{v}</button>)}
@@ -2027,7 +2123,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">備考</div>
         <textarea className="input" rows={3} placeholder="振込手数料はご負担ください。など" value={doc.notes} onChange={e=>setDocument({notes:e.target.value})} style={{resize:'vertical'}} />
       </section>
-      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} /></div>
+      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} /></div>
       <div id="tour-pdf" className="toolbar-actions">
         <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード'}</button>
         <button className="btn btn-outline" onClick={() => window.print()}>🖨️ 印刷</button>
