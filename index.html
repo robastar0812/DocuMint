@@ -2127,6 +2127,7 @@ function App() {
   const handleSignOut = async () => {
     if (!confirm('ログアウトしますか？\nデータはクラウドに保存済みです。')) return;
     await signOut();
+    setIsPro(false); /* 追加: ログアウト時にPro状態をリセット（BUG修正） */
     prevUserId.current = null;
     setSyncStatus(null);
   };
