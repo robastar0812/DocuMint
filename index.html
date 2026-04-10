@@ -228,8 +228,11 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 @media print{
   .mobile-tabs,.sidebar{display:none!important;}
   #line-browser-banner{display:none!important;}/* 追加: LINEバナー印刷時非表示 */
-  .main-area{padding:0!important;display:block!important;}
-  .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;}
+  /* === 修正: main-areaを印刷時に確実に表示（hiddenクラス無効化） === */
+  .main-area,.main-area.hidden{display:block!important;padding:0!important;margin:0!important;height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:0!important;}
+  .preview-wrapper{width:100%!important;overflow:visible!important;}
+  /* === 修正: A4を1ページに収める（PDF生成と同じリセット） === */
+  .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;min-height:0!important;height:auto!important;max-height:1123px!important;overflow:hidden!important;border-radius:0!important;width:100%!important;padding:60px 64px!important;page-break-inside:avoid!important;}
   .doc-total-box,.doc-total-row.grand,.doc-table thead tr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   #crawler-footer{display:none!important;}/* 追加: 印刷時クローラーフッター非表示 */
   .toast-notify{display:none!important;}/* 追加: 印刷時トースト非表示 */
@@ -2432,7 +2435,8 @@ function App() {
             const num = state.doc.number || '番号未設定';
             el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
             const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
-            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).save().then(restore).catch(restore);
+            /* === 修正: .save()→blob+window.openに変更（iOS Safari全バージョン対応） === */
+            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); window.open(url, '_blank'); }).catch(restore);
           }}>📥 PDF</button>
           <button className="btn btn-print" onClick={() => window.print()}>🖨️ 印刷</button>
         </div>
