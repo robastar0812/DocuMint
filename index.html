@@ -227,38 +227,35 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 }
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  /* === 全コンテナリセット（height:100vh/overflow:hidden を解除） === */
+  .app-layout{display:block!important;height:auto!important;overflow:visible!important;}
   .mobile-tabs,.sidebar{display:none!important;}
   #line-browser-banner{display:none!important;}
-  /* === main-areaを印刷時に確実に表示（hiddenクラス無効化・全ブラウザ対応） === */
   .main-area,.main-area.hidden{display:block!important;padding:0!important;margin:0!important;height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:0!important;width:100%!important;}
-  .preview-wrapper{width:100%!important;overflow:visible!important;display:block!important;}
-  /* === A4を1ページに収める（mm単位で全デバイス・全ブラウザ対応） === */
+  .preview-wrapper{width:100%!important;overflow:visible!important;display:block!important;padding:0!important;margin:0!important;gap:0!important;}
+  /* === A4を1ページに収める（縮小で確実に収める） === */
   .a4-paper{
-    transform:none!important;
+    transform:scale(0.92)!important;
+    transform-origin:top center!important;
     margin:0 auto!important;
     box-shadow:none!important;
     min-height:0!important;
     height:auto!important;
-    max-height:290mm!important;
+    max-height:none!important;
     overflow:hidden!important;
     border-radius:0!important;
-    width:200mm!important;
-    max-width:100%!important;
-    padding:15mm 16mm!important;
+    width:794px!important;
+    padding:60px 64px!important;
     box-sizing:border-box!important;
     page-break-inside:avoid!important;
-    page-break-after:avoid!important;
     break-inside:avoid!important;
-    orphans:99!important;
-    widows:99!important;
   }
   /* === 印刷時非表示要素 === */
   #crawler-footer{display:none!important;}
   .toast-notify{display:none!important;}
   .mobile-bottom-bar{display:none!important;}
   .pro-marquee,.pro-marquee-gold{display:none!important;}
-  /* === ページ設定（Chrome/Safari/Edge対応、Firefoxはsize非対応だがmm単位で補完） === */
-  @page{margin:0;size:A4 portrait;}
+  @page{margin:5mm;size:A4 portrait;}
 }
 /* 追加: 認証UI */
 .auth-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--color-border-dark);border-radius:var(--radius-md);background:transparent;font-family:var(--font-sans);font-size:11px;font-weight:500;color:var(--color-primary);cursor:pointer;transition:all .15s;white-space:nowrap;}
@@ -1662,7 +1659,7 @@ const TOUR_STEPS = [
   {
     id: 'tour-pdf',
     title: '⑪ PDFダウンロード・印刷',
-    desc: '「📥 PDFダウンロード」ボタンでPDFファイルとして保存できます。「🖨️ 印刷」ボタンでブラウザの印刷ダイアログを開けます。スマホではプレビュー画面の下部バーからもPDF保存・印刷ができます。',
+    desc: '「📥 PDFダウンロード」ボタンでPDFファイルとして保存できます。「🖨️ 印刷」ボタンで印刷用PDFが新しいタブで開きます。PDFの共有/印刷ボタンからクリーンに印刷できます。スマホではプレビュー画面の下部バーからもPDF保存・印刷ができます。',
   },
   {
     id: 'tour-conveni',
@@ -1862,7 +1859,7 @@ function HelpModal({ onClose }) {
     ]},
     {id:'output',title:'📥 PDF・印刷・コンビニ印刷',content:[
       {step:'① PDFダウンロード',desc:'入力画面の「📥 PDFダウンロード」ボタンをクリックします。',detail:'A4サイズのPDFファイルがダウンロードされます。スマホではプレビュー画面の下部バー「📥 PDF」ボタンからも保存できます。'},
-      {step:'② 印刷する',desc:'入力画面の「🖨️ 印刷」ボタンをクリックします。',detail:'ブラウザの印刷ダイアログが開きます。用紙サイズをA4に設定してください。スマホではプレビュー画面の下部バー「🖨️ 印刷」ボタンからも印刷できます。'},
+      {step:'② 印刷する',desc:'入力画面の「🖨️ 印刷」ボタンをクリックします。',detail:'印刷用PDFが新しいタブで開きます。PDFの共有ボタン（↑）から「プリント」を選んで印刷してください。URL・日付が入らないクリーンな印刷ができます。スマホではプレビュー画面の下部バー「🖨️ 印刷」ボタンからも同様に印刷できます。'},
       {step:'③ コンビニで印刷する',desc:'「🏪 コンビニで印刷する方法」ボタンをクリックします。',detail:'セブン・ファミマ・ローソンでの印刷手順が表示されます。'},
     ]},
   ];
@@ -2101,8 +2098,8 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     const num = doc.number || '番号未設定';
     const filename = label + '_' + num + '.pdf';
     const el = document.getElementById('a4-preview');
-    if (!el) { window.print(); return; }
-    if (typeof html2pdf === 'undefined') { window.print(); return; }
+    if (!el) { alert('プレビューの読み込みに失敗しました。ページを再読み込みしてください。'); return; }
+    if (typeof html2pdf === 'undefined') { alert('PDFライブラリを読み込み中です。少し待ってから再度お試しください。'); return; }
     setPdfLoading(true); /* 追加 */
     /* 修正: スマホのscale変換を一時解除＋min-heightリセットでPDF1ページ化を確実にする */
     el.style.transform = 'none';
@@ -2239,7 +2236,17 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
         <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード'}</button>
-        <button className="btn btn-outline" onClick={() => window.print()}>🖨️ 印刷</button>
+        <button className="btn btn-outline" onClick={() => {
+          /* === 修正: window.print()廃止 → PDF生成して開く（URL/日付混入防止） === */
+          const el = document.getElementById('a4-preview');
+          if (!el || typeof html2pdf === 'undefined') { alert('PDFライブラリを読み込み中です。少し待ってから再度お試しください。'); return; }
+          showToast('🖨️ 印刷用PDFを生成中...');
+          const label = DOC_TYPE_LABELS[doc.type]; const num = doc.number || '番号未設定';
+          el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
+          const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
+          const win = window.open('', '_blank');
+          html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob=pdf.output('blob'); const url=URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} showToast('✅ PDFが開きました。PDFの共有/印刷ボタンから印刷してください'); }).catch(() => { restore(); if(win)win.close(); showToast('⚠️ PDF生成に失敗しました'); });
+        }}>🖨️ 印刷</button>
         <div ref={panelRef} style={{marginTop:8}}>
           <button id="tour-conveni" onClick={() => { const n=!conveniOpen; setConveniOpen(n); if(n) setTimeout(()=>panelRef.current?.scrollIntoView({behavior:'smooth',block:'start'}),50); }} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'9px 14px',background:conveniOpen?'#f1f5f9':'#fff',border:'1px solid #cbd5e1',borderRadius:8,cursor:'pointer',fontSize:13,color:'#334155',fontWeight:500}}>
             <span>🏪</span><span>コンビニで印刷する方法</span>
@@ -2475,7 +2482,17 @@ function App() {
             const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
             html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win) win.close(); });
           }}>📥 PDF</button>
-          <button className="btn btn-print" onClick={() => window.print()}>🖨️ 印刷</button>
+          <button className="btn btn-print" onClick={() => {
+            /* === 修正: window.print()廃止 → PDF生成して開く（URL/日付混入防止） === */
+            const el = document.getElementById('a4-preview');
+            if (!el || typeof html2pdf === 'undefined') return;
+            const win = window.open('', '_blank');
+            const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
+            const num = state.doc.number || '番号未設定';
+            el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
+            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
+            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob=pdf.output('blob'); const url=URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win)win.close(); });
+          }}>🖨️ 印刷</button>
         </div>
       )}
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
