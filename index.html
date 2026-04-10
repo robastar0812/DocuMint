@@ -72,6 +72,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sidebar{width:320px;min-width:320px;background:var(--color-surface);border-right:1px solid var(--color-border);overflow-y:hidden;display:flex;flex-direction:column;}
 .main-area{flex:1;overflow-y:auto;overflow-x:auto;background:var(--color-bg);display:flex;flex-direction:column;align-items:center;padding:16px 24px;gap:8px;min-width:0;}
 .mobile-tabs{display:none;}
+.mobile-bottom-bar{display:none;}
 
 /* ツールバー */
 .toolbar{display:flex;flex-direction:column;min-height:100%;padding-bottom:24px;}
@@ -195,9 +196,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 }
 @media screen and (max-width:768px){
   .app-layout{flex-direction:column;height:100vh;overflow:hidden;}
-  .mobile-tabs{display:flex;background:var(--color-primary);position:sticky;top:0;z-index:100;flex-shrink:0;}
-  .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.6);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
-  .mobile-tab.active{color:white;border-bottom-color:white;}
+  .mobile-tabs{display:flex;background:linear-gradient(90deg,#6c3fd4,#2d7cf6);position:sticky;top:0;z-index:100;flex-shrink:0;}
+  .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .mobile-tab.active{color:white;font-weight:700;background:rgba(255,255,255,0.12);border-bottom-color:#00d4c8;}
   .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;}
   .sidebar.hidden{display:none!important;}.main-area.hidden{display:none!important;}
   .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;}
@@ -208,14 +209,34 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
     transform:scale(var(--a4-scale, 0.45));
     margin-bottom:calc((var(--a4-scale, 0.45) - 1) * 1123px);
   }
+  /* === 追加: スマホ入力欄拡大（iOS Safari自動ズーム防止：16px以上必須） === */
+  /* ※ A4プレビュー内の入力欄は対象外（書類レイアウトを壊さないため） */
+  .sidebar .input,.sidebar input,.sidebar select,.sidebar textarea,
+  .modal-box .input,.modal-box input,.modal-box select,.modal-box textarea{font-size:16px!important;padding:10px 12px!important;}
+  /* === 追加: スマホ保存ボタン・操作ボタン拡大（タップしやすく） === */
+  .save-btns .btn{padding:14px!important;font-size:14px!important;}
+  .history-item-actions .btn{padding:6px 12px!important;font-size:12px!important;min-height:36px;}
+  /* === 追加: スマホプレビュー固定フッターバー === */
+  .mobile-bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;background:linear-gradient(90deg,#6c3fd4,#2d7cf6);padding:10px 12px;gap:8px;box-shadow:0 -2px 10px rgba(0,0,0,.2);}
+  .mobile-bottom-bar .btn{flex:1;padding:12px 6px;font-size:13px;font-weight:600;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;}
+  .mobile-bottom-bar .btn-back{background:rgba(255,255,255,.15);color:white;}
+  .mobile-bottom-bar .btn-pdf{background:white;color:var(--color-primary);}
+  .mobile-bottom-bar .btn-print{background:rgba(255,255,255,.15);color:white;}
+  /* 追加: プレビューエリアの下余白（固定バーに隠れないように） */
+  .main-area{padding-bottom:70px!important;}
 }
 @media print{
   .mobile-tabs,.sidebar{display:none!important;}
   #line-browser-banner{display:none!important;}/* 追加: LINEバナー印刷時非表示 */
-  .main-area{padding:0!important;display:block!important;}
-  .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;}
+  /* === 修正: main-areaを印刷時に確実に表示（hiddenクラス無効化） === */
+  .main-area,.main-area.hidden{display:block!important;padding:0!important;margin:0!important;height:auto!important;max-height:none!important;overflow:visible!important;padding-bottom:0!important;}
+  .preview-wrapper{width:100%!important;overflow:visible!important;}
+  /* === 修正: A4を1ページに収める（PDF生成と同じリセット） === */
+  .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;min-height:0!important;height:auto!important;max-height:1123px!important;overflow:hidden!important;border-radius:0!important;width:100%!important;padding:60px 64px!important;page-break-inside:avoid!important;}
   .doc-total-box,.doc-total-row.grand,.doc-table thead tr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   #crawler-footer{display:none!important;}/* 追加: 印刷時クローラーフッター非表示 */
+  .toast-notify{display:none!important;}/* 追加: 印刷時トースト非表示 */
+  .mobile-bottom-bar{display:none!important;}/* 追加: 印刷時フッターバー非表示 */
   @page{margin:0;size:A4;}
 }
 /* 追加: 認証UI */
@@ -232,11 +253,14 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator{display:inline-flex;align-items:center;justify-content:center;font-size:12px;padding:2px;border-radius:99px;flex-shrink:0;}
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
+/* === 追加: トースト通知 === */
+.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:12px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
+.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
-.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:13px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
+.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
 </head>
 <body>
@@ -326,7 +350,14 @@ function saveToSupabase(userId, state, onStart, onDone) {
         user_id: userId,
         my_company: state.myCompany,
         client_data: state.client,
-        doc_settings: state.docSettings,
+        /* === 変更: 角印・ロゴをdoc_settingsに含めてクラウド同期 === */
+        doc_settings: {
+          ...state.docSettings,
+          _stampImage: state.doc?.stampImage || null,
+          _logoImage: state.doc?.logoImage || null,
+          _stampPosition: state.doc?.stampPosition || null,
+          _logoPosition: state.doc?.logoPosition || null,
+        },
         templates: state.templates,
         saved_docs: state.savedDocs.map(d => { const {stampImage, logoImage, ...rest} = (d.document || d); return {...d, document: rest}; }),
         updated_at: new Date().toISOString(),
@@ -414,7 +445,15 @@ function useAppState() {
   const loadAll = (data) => {
     if (data.myCompany) setMyCompanyState({...defaultMyCompany, ...data.myCompany});
     if (data.client) setClientState({...defaultClient, ...data.client});
-    if (data.docSettings) setDocSettingsState({...defaultDocSettings, ...data.docSettings});
+    if (data.docSettings) {
+      /* === 変更: doc_settingsから角印・ロゴを分離して復元 === */
+      const { _stampImage, _logoImage, _stampPosition, _logoPosition, ...pureSettings } = data.docSettings;
+      setDocSettingsState({...defaultDocSettings, ...pureSettings});
+      if (_stampImage) setStampImage(_stampImage);
+      if (_logoImage) setLogoImage(_logoImage);
+      if (_stampPosition) setStampPosition(_stampPosition);
+      if (_logoPosition) setLogoPosition(_logoPosition);
+    }
     if (data.templates) setTemplates(data.templates);
     if (data.savedDocs) setSavedDocs(data.savedDocs);
     if (typeof data.isPro === 'boolean') setIsPro(data.isPro);
@@ -629,7 +668,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
   );
 }
 
-function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, doc, onShowUpgrade, isPro }) {
+function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, doc, onShowUpgrade, isPro, showToast }) {
   const FREE_LIMIT = 2;
   const [tab, setTab] = useState('docs');
   const [saveName, setSaveName] = useState('');
@@ -648,6 +687,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveDocument(saveName.trim());
+      showToast('✅ 書類を保存しました'); /* 追加: トースト通知 */
     }
     if (mode === 'saveTmpl') {
       if (!isPro && templates.length >= FREE_LIMIT) {
@@ -656,6 +696,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveTemplate(saveName.trim());
+      showToast('✅ テンプレートを保存しました'); /* 追加: トースト通知 */
     }
     setSaveName(''); setMode(null);
   };
@@ -667,6 +708,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       return;
     }
     duplicateDocument(id);
+    showToast('📄 書類を複製しました'); /* 追加: トースト通知 */
   };
 
   const fmtDate = iso => { const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
@@ -741,7 +783,15 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       {/* 追加: 検索バー（3件以上で表示） */}
       {((tab==='docs' && savedDocs.length >= 3) || (tab==='templates' && templates.length >= 3)) && (
         <div style={{padding:'8px 16px',borderBottom:'1px solid var(--color-border)'}}>
-          <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px'}} />
+          {/* === 変更: 検索ボタン追加（スマホキーボード閉じ＋結果通知） === */}
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <div style={{flex:1,position:'relative'}}>
+              <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px',paddingRight:search?28:10,width:'100%'}} />
+              {/* === 追加: 検索クリアボタン === */}
+              {search && <button onClick={() => { setSearch(''); showToast('🔍 検索をクリアしました'); }} style={{position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',fontSize:14,color:'#999',cursor:'pointer',padding:'2px',lineHeight:1}}>✕</button>}
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={() => { document.activeElement.blur(); const count = tab==='docs' ? filteredDocs.length : filteredTemplates.length; showToast(search ? `🔍 ${count}件見つかりました` : `📂 全${count}件を表示中`); }} style={{whiteSpace:'nowrap',padding:'6px 12px',fontSize:12}}>検索</button>
+          </div>
         </div>
       )}
       {/* 追加: タイプフィルター（書類タブかつ3件以上で表示） */}
@@ -770,9 +820,9 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                       <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                     </div>
                     <div className="history-item-actions">
-                      <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                      <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
                       <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
-                      <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
+                      <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                     </div>
                   </div>
                 ))}
@@ -784,9 +834,9 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                   <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                 </div>
                 <div className="history-item-actions">
-                  <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
                   <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
-                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
+                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                 </div>
               </div>
             ))
@@ -804,8 +854,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                   <div className="history-item-meta">{t.items.length}行 · {fmtDate(t.createdAt)}</div>
                 </div>
                 <div className="history-item-actions">
-                  <button className="btn btn-outline btn-sm" onClick={() => loadTemplate(t.id)}>適用</button>
-                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('このテンプレートを削除しますか？\nこの操作は取り消せません。')) deleteTemplate(t.id); }}>🗑</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('このテンプレートを適用しますか？\n現在の明細内容が上書きされます。')) { loadTemplate(t.id); showToast('📋 テンプレートを適用しました'); } }}>適用</button>
+                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('このテンプレートを削除しますか？\nこの操作は取り消せません。')) { deleteTemplate(t.id); showToast('🗑 テンプレートを削除しました'); } }}>🗑</button>
                 </div>
               </div>
             ))
@@ -2006,7 +2056,7 @@ function Preview({ state }) {
   );
 }
 
-function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus /* 追加 */ }) {
+function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus, showToast, onRegisterPDF /* 追加: PDF関数共有 */ }) {
   const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
@@ -2048,13 +2098,21 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     };
     html2pdf().set(opt).from(el).save().then(restore).catch(restore);
   };
+  /* === 追加: PDF関数をApp側に登録（フッターバーと共有・常に最新版を参照） === */
+  const handlePDFRef_inner = useRef(handlePDF);
+  handlePDFRef_inner.current = handlePDF;
+  useEffect(() => { if (onRegisterPDF) onRegisterPDF(() => handlePDFRef_inner.current()); }, []);
 
   return (
     <div className="toolbar">
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-          <div className="toolbar-logo">DocuMint</div>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div className="toolbar-logo">DocuMint</div>
+            {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
+            {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',borderRadius:4,padding:'2px 6px',lineHeight:1.2,letterSpacing:'.05em'}}>PRO</span>}
+          </div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             {/* 追加: 同期ステータス */}
             {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
@@ -2142,7 +2200,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">備考</div>
         <textarea className="input" rows={3} placeholder="振込手数料はご負担ください。など" value={doc.notes} onChange={e=>setDocument({notes:e.target.value})} style={{resize:'vertical'}} />
       </section>
-      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} /></div>
+      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
         <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード'}</button>
         <button className="btn btn-outline" onClick={() => window.print()}>🖨️ 印刷</button>
@@ -2192,6 +2250,12 @@ function App() {
   const [upgradeModal, setUpgradeModal] = useState(null); // null | 'template' | 'doc'
   const [showInstall, setShowInstall] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState(null); // 決済結果通知
+  /* === 追加: トースト通知（App最上位で管理 → sidebarのoverflow影響を回避） === */
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const showToast = msg => { clearTimeout(toastTimer.current); setToast(msg); toastTimer.current = setTimeout(() => setToast(null), 2000); };
+  /* === 追加: PDF関数共有（sidebar・フッターバー両方で同一関数を使用） === */
+  const handlePDFRef = useRef(null);
 
   // === 追加: 認証状態 ===
   const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
@@ -2255,7 +2319,7 @@ function App() {
     );
     // 変更: 不要なsyncStatus制御を削除（コールバックに移動）
     return () => {};
-  }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs]);
+  }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs, state.doc.stampImage, state.doc.logoImage]);
 
   // === 追加: ログアウト処理 ===
   const handleSignOut = async () => {
@@ -2315,13 +2379,15 @@ function App() {
 
   return (
     <div className="app-layout">
+      {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
+      {toast && <div className="toast-notify">{toast}</div>}
       <div className="mobile-tabs">
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
-          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
+          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} onRegisterPDF={fn => handlePDFRef.current = fn} />
         </div>
         <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
           {/* 追加: Pro解約・プラン管理 */}
@@ -2357,6 +2423,25 @@ function App() {
       <main className={`main-area ${mobileTab==='input'?'hidden':''}`}>
         <Preview state={state} />
       </main>
+      {/* === 追加: スマホプレビュー固定フッターバー（入力に戻る・PDF・印刷） === */}
+      {mobileTab === 'preview' && (
+        <div className="mobile-bottom-bar">
+          <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
+          {/* === 修正: iOS Safari対策 — ref/toast/setTimeout一切なし、直接呼び出しのみ === */}
+          <button className="btn btn-pdf" onClick={() => {
+            const el = document.getElementById('a4-preview');
+            if (!el || typeof html2pdf === 'undefined') return;
+            /* === 修正: ウィンドウを先に開く（iOS Safariポップアップブロック回避） === */
+            const win = window.open('', '_blank');
+            const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
+            const num = state.doc.number || '番号未設定';
+            el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
+            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
+            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win) win.close(); });
+          }}>📥 PDF</button>
+          <button className="btn btn-print" onClick={() => window.print()}>🖨️ 印刷</button>
+        </div>
+      )}
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
       {activeModal==='client' && <ClientModal client={client} setClient={setClient} onClose={() => setActiveModal(null)} />}
       {activeModal==='settings' && <SettingsModal docSettings={docSettings} setDocSettings={setDocSettings} onClose={() => setActiveModal(null)} />}
@@ -2404,5 +2489,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
   <p><strong>有料プラン：</strong>月額500円（税込）- テンプレート・書類保存が無制限。登録時に課金が発生し、毎月同日に自動更新されます。</p>
   <p>有料プランはいつでも解約可能です。ログイン後、画面下部の「有料プランを解約する」ボタンから手続きできます。解約は次回更新日の前日までに行ってください。</p>
-  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8cad7dad9cbccd9ca8b8d818b8088f8dfd5d9d1d496dbd7d5">[email&#160;protected]</a></p>
+  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dcaeb3bebdafa8bdaeefe9e5efe4ec9cbbb1bdb5b0f2bfb3b1">[email&#160;protected]</a></p>
   <a href="/tokushoho.html">特定商取引法に基づく表記</a
