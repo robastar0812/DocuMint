@@ -216,6 +216,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .a4-paper{transform:none!important;margin-bottom:0!important;box-shadow:none!important;}
   .doc-total-box,.doc-total-row.grand,.doc-table thead tr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   #crawler-footer{display:none!important;}/* 追加: 印刷時クローラーフッター非表示 */
+  .toast-notify{display:none!important;}/* 追加: 印刷時トースト非表示 */
   @page{margin:0;size:A4;}
 }
 /* 追加: 認証UI */
@@ -232,6 +233,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator{display:inline-flex;align-items:center;justify-content:center;font-size:12px;padding:2px;border-radius:99px;flex-shrink:0;}
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
+/* === 追加: トースト通知 === */
+.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
@@ -638,6 +642,10 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all'); // 'all'|'invoice'|'receipt'|'estimate'
   const [collapsed, setCollapsed] = useState({}); // { '2026年4月': true } 月別折りたたみ
+  /* === 追加: トースト通知 === */
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const showToast = msg => { clearTimeout(toastTimer.current); setToast(msg); toastTimer.current = setTimeout(() => setToast(null), 2000); };
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -648,6 +656,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveDocument(saveName.trim());
+      showToast('✅ 書類を保存しました'); /* 追加: トースト通知 */
     }
     if (mode === 'saveTmpl') {
       if (!isPro && templates.length >= FREE_LIMIT) {
@@ -656,6 +665,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveTemplate(saveName.trim());
+      showToast('✅ テンプレートを保存しました'); /* 追加: トースト通知 */
     }
     setSaveName(''); setMode(null);
   };
@@ -667,6 +677,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       return;
     }
     duplicateDocument(id);
+    showToast('📄 書類を複製しました'); /* 追加: トースト通知 */
   };
 
   const fmtDate = iso => { const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
@@ -702,6 +713,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
 
   return (
     <div className="history-panel">
+      {/* === 追加: トースト通知 === */}
+      {toast && <div className="toast-notify">{toast}</div>}
       <div className="history-tabs">
         <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => { setTab('docs'); setSearch(''); setTypeFilter('all'); }}>
           📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
@@ -741,7 +754,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       {/* 追加: 検索バー（3件以上で表示） */}
       {((tab==='docs' && savedDocs.length >= 3) || (tab==='templates' && templates.length >= 3)) && (
         <div style={{padding:'8px 16px',borderBottom:'1px solid var(--color-border)'}}>
-          <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px'}} />
+          {/* === 変更: 検索ボタン追加（スマホキーボード閉じ＋結果通知） === */}
+          <div style={{display:'flex',gap:6}}>
+            <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px',flex:1}} />
+            <button className="btn btn-primary btn-sm" onClick={() => { document.activeElement.blur(); const count = tab==='docs' ? filteredDocs.length : filteredTemplates.length; showToast(search ? `🔍 ${count}件見つかりました` : `📂 全${count}件を表示中`); }} style={{whiteSpace:'nowrap',padding:'6px 12px',fontSize:12}}>検索</button>
+          </div>
         </div>
       )}
       {/* 追加: タイプフィルター（書類タブかつ3件以上で表示） */}
@@ -772,7 +789,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                     <div className="history-item-actions">
                       <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
                       <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
-                      <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
+                      <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                     </div>
                   </div>
                 ))}
@@ -786,7 +803,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 <div className="history-item-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
                   <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
-                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) deleteDoc(d.id); }}>🗑</button>
+                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                 </div>
               </div>
             ))
@@ -805,7 +822,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </div>
                 <div className="history-item-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => loadTemplate(t.id)}>適用</button>
-                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('このテンプレートを削除しますか？\nこの操作は取り消せません。')) deleteTemplate(t.id); }}>🗑</button>
+                  <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('このテンプレートを削除しますか？\nこの操作は取り消せません。')) { deleteTemplate(t.id); showToast('🗑 テンプレートを削除しました'); } }}>🗑</button>
                 </div>
               </div>
             ))
