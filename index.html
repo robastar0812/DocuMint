@@ -197,8 +197,8 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 @media screen and (max-width:768px){
   .app-layout{flex-direction:column;height:100vh;overflow:hidden;}
   .mobile-tabs{display:flex;background:var(--color-primary);position:sticky;top:0;z-index:100;flex-shrink:0;}
-  .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.6);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
-  .mobile-tab.active{color:white;border-bottom-color:white;}
+  .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .mobile-tab.active{color:white;font-weight:700;background:rgba(255,255,255,0.12);border-bottom-color:#00d4c8;}
   .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;}
   .sidebar.hidden{display:none!important;}.main-area.hidden{display:none!important;}
   .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;}
@@ -2397,18 +2397,23 @@ function App() {
       </main>
       {/* === 追加: スマホプレビュー固定フッターバー（入力に戻る・PDF・印刷） === */}
       {mobileTab === 'preview' && (
-        <div className="mobile-bottom-bar">
+        <div className="mobile-bottom-bar" id="mobile-bottom-bar">
           <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
           <button className="btn btn-pdf" onClick={() => {
             const el = document.getElementById('a4-preview');
-            if (!el || typeof html2pdf === 'undefined') { window.print(); return; }
+            if (!el || typeof html2pdf === 'undefined') { showToast('⚠️ PDF生成に必要なライブラリが読み込まれていません'); return; }
+            showToast('⏳ PDF生成中...');
+            const bar = document.getElementById('mobile-bottom-bar');
+            if (bar) bar.style.display = 'none';
             const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
             const num = state.doc.number || '番号未設定';
             el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
-            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
-            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).save().then(restore).catch(restore);
+            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; if (bar) bar.style.display=''; showToast('✅ PDFを保存しました'); };
+            requestAnimationFrame(() => {
+              html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).save().then(restore).catch(() => { restore(); showToast('⚠️ PDF生成に失敗しました'); });
+            });
           }}>📥 PDF</button>
-          <button className="btn btn-print" onClick={() => window.print()}>🖨️ 印刷</button>
+          <button className="btn btn-print" onClick={() => { showToast('🖨️ 印刷ダイアログを開きます'); setTimeout(() => window.print(), 500); }}>🖨️ 印刷</button>
         </div>
       )}
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
