@@ -1245,10 +1245,25 @@ function InstallModal({ onClose }) {
 
 
 // ==================== 有料プラン誘導モーダル ====================
-function UpgradeModal({ type, onClose, userEmail, onRequireLogin /* 追加: ログイン必須化 */ }) {
-  const typeLabel = type === 'template' ? 'テンプレート' : '保存書類';
+function UpgradeModal({ type, onClose, userEmail, onRequireLogin, isPro /* 追加: 二重決済防止 */ }) {
+  const typeLabel = type === 'template' ? '保存テンプレート' : '保存書類';
   const isVoluntary = type === 'upgrade'; /* 追加: バナーからの自主アップグレード判定 */
   const [loading, setLoading] = useState(false);
+
+  /* === 追加: 既にPro済みなら決済に飛ばさず案内表示 === */
+  if (isPro) {
+    return (
+      <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
+          onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
+        <div className="modal-box" style={{maxWidth:400,textAlign:'center',padding:32}}>
+          <div style={{fontSize:48,marginBottom:12}}>✅</div>
+          <div style={{fontSize:18,fontWeight:700,color:'#1a2744',marginBottom:12}}>有料プラン加入済みです</div>
+          <div style={{fontSize:13,color:'#666',lineHeight:1.6,marginBottom:20}}>保存テンプレート・保存書類は<strong>無制限</strong>でご利用いただけます。</div>
+          <button style={{padding:'10px 24px',border:'none',borderRadius:10,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}} onClick={onClose}>閉じる</button>
+        </div>
+      </div>
+    );
+  }
 
   // === Stripe Checkout へリダイレクト ===
   const handleUpgrade = async () => {
@@ -1289,7 +1304,7 @@ function UpgradeModal({ type, onClose, userEmail, onRequireLogin /* 追加: ロ�
           </div>
           <div style={{fontSize:13,color:'#666',lineHeight:1.6,marginBottom:20}}>
             {isVoluntary
-              ? <>有料プランにアップグレードすると<br/>テンプレート・書類保存が<strong>無制限</strong>になります！</>
+              ? <>有料プランにアップグレードすると<br/>保存テンプレート・保存書類が<strong>無制限</strong>になります！</>
               : <>{typeLabel}は無料プランでは<strong>2件まで</strong>保存できます。<br/>有料プランにアップグレードすると<strong>無制限</strong>で使えます！</>
             }
           </div>
@@ -1303,7 +1318,7 @@ function UpgradeModal({ type, onClose, userEmail, onRequireLogin /* 追加: ロ�
             <div style={{padding:'10px',fontSize:12,fontWeight:700,background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>有料プラン ¥500/月</div>
           </div>
           {[
-            ['テンプレート', '2件まで', '無制限'],
+            ['保存テンプレート', '2件まで', '無制限'],
             ['保存書類', '2件まで', '無制限'],
             ['デザイン設定', '✅', '✅'],
             ['クラウド同期', '✅（要ログイン）', '✅'],
@@ -2202,6 +2217,10 @@ function App() {
       }
       if (profile) merged.isPro = profile.is_pro || false;
       if (Object.keys(merged).length) loadAll(merged);
+      /* === 追加: is_pro独立フォールバック（loadAllでisPro反映漏れ防止） === */
+      if (profile && profile.is_pro === true) {
+        setIsPro(true);
+      }
       setSyncStatus('synced');
       // 追加: state更新が反映された後にフラグ解除（不要な再保存を防止）
       setTimeout(() => {
@@ -2209,6 +2228,17 @@ function App() {
         setSyncStatus(null);
       }, 1500);
     });
+  }, [user]);
+
+  // === 追加: is_pro独立チェック（メイン読込失敗時のフォールバック） ===
+  useEffect(() => {
+    if (!user) return;
+    supabaseClient.from('profiles').select('is_pro').eq('id', user.id).single().then(({ data }) => {
+      if (data && data.is_pro === true && !state.isPro) {
+        setIsPro(true);
+        console.log('[DocuMint] is_proフォールバック: Proに更新しました');
+      }
+    }).catch(() => {});
   }, [user]);
 
   // === 追加: 状態変更時にSupabaseへ自動保存 ===
@@ -2244,7 +2274,7 @@ function App() {
     if (checkout === 'success') {
       setIsPro(true); // 有料プラン有効化
       setCheckoutDone(true); /* 追加: フラグ保持（user読込待ち用） */
-      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！テンプレート・書類保存が無制限になりました。' });
+      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！保存テンプレート・保存書類が無制限になりました。' });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
     }
@@ -2341,7 +2371,7 @@ function App() {
         />
       )}
       {upgradeModal && (
-        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} userEmail={user?.email} onRequireLogin={() => { setUpgradeModal(null); setShowAuth(true); }} />
+        <UpgradeModal type={upgradeModal} onClose={() => setUpgradeModal(null)} userEmail={user?.email} onRequireLogin={() => { setUpgradeModal(null); setShowAuth(true); }} isPro={state.isPro} />
       )}
       {showInstall && (
         <InstallModal onClose={() => setShowInstall(false)} />
@@ -2374,8 +2404,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
   <p><strong>有料プラン：</strong>月額500円（税込）- テンプレート・書類保存が無制限。登録時に課金が発生し、毎月同日に自動更新されます。</p>
   <p>有料プランはいつでも解約可能です。ログイン後、画面下部の「有料プランを解約する」ボタンから手続きできます。解約は次回更新日の前日までに行ってください。</p>
-  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜robastar359380@gmail.com</p>
-  <a href="/tokushoho.html">特定商取引法に基づく表記</a>｜<a href="/privacy.html">プライバシーポリシー</a>｜<a href="/terms.html">利用規約</a>
-</div>
-</body>
-</html>
+  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8cad7dad9cbccd9ca8b8d818b8088f8dfd5d9d1d496dbd7d5">[email&#160;protected]</a></p>
+  <a href="/tokushoho.html">特定商取引法に基づく表記</a
