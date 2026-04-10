@@ -347,7 +347,14 @@ function saveToSupabase(userId, state, onStart, onDone) {
         user_id: userId,
         my_company: state.myCompany,
         client_data: state.client,
-        doc_settings: state.docSettings,
+        /* === 変更: 角印・ロゴをdoc_settingsに含めてクラウド同期 === */
+        doc_settings: {
+          ...state.docSettings,
+          _stampImage: state.doc?.stampImage || null,
+          _logoImage: state.doc?.logoImage || null,
+          _stampPosition: state.doc?.stampPosition || null,
+          _logoPosition: state.doc?.logoPosition || null,
+        },
         templates: state.templates,
         saved_docs: state.savedDocs.map(d => { const {stampImage, logoImage, ...rest} = (d.document || d); return {...d, document: rest}; }),
         updated_at: new Date().toISOString(),
@@ -435,7 +442,15 @@ function useAppState() {
   const loadAll = (data) => {
     if (data.myCompany) setMyCompanyState({...defaultMyCompany, ...data.myCompany});
     if (data.client) setClientState({...defaultClient, ...data.client});
-    if (data.docSettings) setDocSettingsState({...defaultDocSettings, ...data.docSettings});
+    if (data.docSettings) {
+      /* === 変更: doc_settingsから角印・ロゴを分離して復元 === */
+      const { _stampImage, _logoImage, _stampPosition, _logoPosition, ...pureSettings } = data.docSettings;
+      setDocSettingsState({...defaultDocSettings, ...pureSettings});
+      if (_stampImage) setStampImage(_stampImage);
+      if (_logoImage) setLogoImage(_logoImage);
+      if (_stampPosition) setStampPosition(_stampPosition);
+      if (_logoPosition) setLogoPosition(_logoPosition);
+    }
     if (data.templates) setTemplates(data.templates);
     if (data.savedDocs) setSavedDocs(data.savedDocs);
     if (typeof data.isPro === 'boolean') setIsPro(data.isPro);
@@ -766,8 +781,12 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       {((tab==='docs' && savedDocs.length >= 3) || (tab==='templates' && templates.length >= 3)) && (
         <div style={{padding:'8px 16px',borderBottom:'1px solid var(--color-border)'}}>
           {/* === 変更: 検索ボタン追加（スマホキーボード閉じ＋結果通知） === */}
-          <div style={{display:'flex',gap:6}}>
-            <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px',flex:1}} />
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <div style={{flex:1,position:'relative'}}>
+              <input className="input" placeholder={tab==='docs'?'🔍 書類名で検索':'🔍 テンプレート名で検索'} value={search} onChange={e=>setSearch(e.target.value)} style={{fontSize:12,padding:'6px 10px',paddingRight:search?28:10,width:'100%'}} />
+              {/* === 追加: 検索クリアボタン === */}
+              {search && <button onClick={() => { setSearch(''); showToast('🔍 検索をクリアしました'); }} style={{position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',fontSize:14,color:'#999',cursor:'pointer',padding:'2px',lineHeight:1}}>✕</button>}
+            </div>
             <button className="btn btn-primary btn-sm" onClick={() => { document.activeElement.blur(); const count = tab==='docs' ? filteredDocs.length : filteredTemplates.length; showToast(search ? `🔍 ${count}件見つかりました` : `📂 全${count}件を表示中`); }} style={{whiteSpace:'nowrap',padding:'6px 12px',fontSize:12}}>検索</button>
           </div>
         </div>
@@ -2297,7 +2316,7 @@ function App() {
     );
     // 変更: 不要なsyncStatus制御を削除（コールバックに移動）
     return () => {};
-  }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs]);
+  }, [user, state.myCompany, state.client, state.docSettings, state.templates, state.savedDocs, state.doc.stampImage, state.doc.logoImage]);
 
   // === 追加: ログアウト処理 ===
   const handleSignOut = async () => {
@@ -2403,12 +2422,19 @@ function App() {
       </main>
       {/* === 追加: スマホプレビュー固定フッターバー（入力に戻る・PDF・印刷） === */}
       {mobileTab === 'preview' && (
-        <div className="mobile-bottom-bar" id="mobile-bottom-bar">
+        <div className="mobile-bottom-bar">
           <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
+          {/* === 修正: iOS Safari対策 — ref/toast/setTimeout一切なし、直接呼び出しのみ === */}
           <button className="btn btn-pdf" onClick={() => {
-            if (handlePDFRef.current) { handlePDFRef.current(); } else { showToast('⚠️ PDF機能を読み込み中です'); }
+            const el = document.getElementById('a4-preview');
+            if (!el || typeof html2pdf === 'undefined') return;
+            const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
+            const num = state.doc.number || '番号未設定';
+            el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
+            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
+            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).save().then(restore).catch(restore);
           }}>📥 PDF</button>
-          <button className="btn btn-print" onClick={() => { showToast('🖨️ 印刷ダイアログを開きます'); setTimeout(() => window.print(), 500); }}>🖨️ 印刷</button>
+          <button className="btn btn-print" onClick={() => window.print()}>🖨️ 印刷</button>
         </div>
       )}
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
