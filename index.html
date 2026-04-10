@@ -234,9 +234,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:12px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
+.pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
-.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:13px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
+.pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
 </head>
 <body>
@@ -2054,7 +2054,11 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-          <div className="toolbar-logo">DocuMint</div>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div className="toolbar-logo">DocuMint</div>
+            {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
+            {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',borderRadius:4,padding:'2px 6px',lineHeight:1.2,letterSpacing:'.05em'}}>PRO</span>}
+          </div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             {/* 追加: 同期ステータス */}
             {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
@@ -2404,5 +2408,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   <p><strong>無料プラン：</strong>基本機能（テンプレート・書類保存は各2件まで）</p>
   <p><strong>有料プラン：</strong>月額500円（税込）- テンプレート・書類保存が無制限。登録時に課金が発生し、毎月同日に自動更新されます。</p>
   <p>有料プランはいつでも解約可能です。ログイン後、画面下部の「有料プランを解約する」ボタンから手続きできます。解約は次回更新日の前日までに行ってください。</p>
-  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8cad7dad9cbccd9ca8b8d818b8088f8dfd5d9d1d496dbd7d5">[email&#160;protected]</a></p>
+  <p>販売事業者：間宮 洋一｜〒215-0027 神奈川県川崎市麻生区岡上1丁目5-2 メゾン河内201｜TEL: 090-3135-6276｜<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dcaeb3bebdafa8bdaeefe9e5efe4ec9cbbb1bdb5b0f2bfb3b1">[email&#160;protected]</a></p>
   <a href="/tokushoho.html">特定商取引法に基づく表記</a
