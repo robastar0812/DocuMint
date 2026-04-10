@@ -212,7 +212,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   /* === 追加: スマホ入力欄拡大（iOS Safari自動ズーム防止：16px以上必須） === */
   /* ※ A4プレビュー内の入力欄は対象外（書類レイアウトを壊さないため） */
   .sidebar .input,.sidebar input,.sidebar select,.sidebar textarea,
-  .modal-box .input,.modal-box input,.modal-box select,.modal-box textarea{font-size:16px!important;padding:10px 12px!important;}
+  .modal-box .input,.modal-box input,.modal-box select,.modal-box textarea{font-size:16px!important;padding-top:10px!important;padding-bottom:10px!important;padding-left:12px!important;}
   /* === 追加: スマホ保存ボタン・操作ボタン拡大（タップしやすく） === */
   .save-btns .btn{padding:14px!important;font-size:14px!important;}
   .history-item-actions .btn{padding:6px 12px!important;font-size:12px!important;min-height:36px;}
@@ -260,8 +260,8 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
 /* === 追加: Proユーザー用ゴールドマーキー === */
-.pro-marquee-gold{overflow:hidden;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#f6a800,#f59e0b,#eab308);display:flex;align-items:center;}
-.pro-marquee-gold .pro-marquee-track span{color:#5a3e00;}
+.pro-marquee-gold{overflow:hidden;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#b8860b,#daa520,#ffd700,#daa520,#b8860b);display:flex;align-items:center;}
+.pro-marquee-gold .pro-marquee-track span{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);}
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
 .pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
@@ -356,10 +356,10 @@ function saveToSupabase(userId, state, onStart, onDone) {
         /* === 変更: 角印・ロゴをdoc_settingsに含めてクラウド同期 === */
         doc_settings: {
           ...state.docSettings,
-          _stampImage: state.doc?.stampImage || null,
-          _logoImage: state.doc?.logoImage || null,
-          _stampPosition: state.doc?.stampPosition || null,
-          _logoPosition: state.doc?.logoPosition || null,
+          _stampImage: state.doc.stampImage || null,
+          _logoImage: state.doc.logoImage || null,
+          _stampPosition: state.doc.stampPosition || null,
+          _logoPosition: state.doc.logoPosition || null,
         },
         templates: state.templates,
         saved_docs: state.savedDocs.map(d => { const {stampImage, logoImage, ...rest} = (d.document || d); return {...d, document: rest}; }),
@@ -2162,14 +2162,10 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       {isPro && (
         <div className="pro-marquee-gold">
           <div className="pro-marquee-track">
-            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐</span>
-            <span>💎 保存テンプレート・保存書類が無制限でご利用いただけます</span>
-            <span>☁️ 角印・ロゴ・テンプレートはクラウドに自動保存されています</span>
-            <span>🚀 新機能を随時追加中です — ご要望はお気軽にどうぞ！</span>
-            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐</span>
-            <span>💎 保存テンプレート・保存書類が無制限でご利用いただけます</span>
-            <span>☁️ 角印・ロゴ・テンプレートはクラウドに自動保存されています</span>
-            <span>🚀 新機能を随時追加中です — ご要望はお気軽にどうぞ！</span>
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
           </div>
         </div>
       )}
