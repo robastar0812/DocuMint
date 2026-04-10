@@ -259,6 +259,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .pro-marquee{overflow:hidden;cursor:pointer;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);display:flex;align-items:center;}
+/* === 追加: Proユーザー用ゴールドマーキー === */
+.pro-marquee-gold{overflow:hidden;border:none;width:100%;padding:24px 0;background:linear-gradient(90deg,#f6a800,#f59e0b,#eab308);display:flex;align-items:center;}
+.pro-marquee-gold .pro-marquee-track span{color:#5a3e00;}
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
 .pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
@@ -2152,6 +2155,21 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             <span>📋 書類の複製ワンタップ！先月の請求書を一瞬でコピー</span>
             <span>📂 月別自動整理で大量の書類もスッキリ管理</span>
             <span>☁️ クラウド同期でスマホ・PC・タブレットどこでも</span>
+          </div>
+        </div>
+      )}
+      {/* === 追加: Proユーザー用ゴールドマーキー（感謝＋機能リマインド） === */}
+      {isPro && (
+        <div className="pro-marquee-gold">
+          <div className="pro-marquee-track">
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐</span>
+            <span>💎 保存テンプレート・保存書類が無制限でご利用いただけます</span>
+            <span>☁️ 角印・ロゴ・テンプレートはクラウドに自動保存されています</span>
+            <span>🚀 新機能を随時追加中です — ご要望はお気軽にどうぞ！</span>
+            <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐</span>
+            <span>💎 保存テンプレート・保存書類が無制限でご利用いただけます</span>
+            <span>☁️ 角印・ロゴ・テンプレートはクラウドに自動保存されています</span>
+            <span>🚀 新機能を随時追加中です — ご要望はお気軽にどうぞ！</span>
           </div>
         </div>
       )}
