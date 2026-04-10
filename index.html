@@ -1659,7 +1659,7 @@ const TOUR_STEPS = [
   {
     id: 'tour-pdf',
     title: '⑪ PDFダウンロード・印刷',
-    desc: '「📥 PDFダウンロード」ボタンでPDFファイルとして保存できます。「🖨️ 印刷」ボタンで印刷用PDFが新しいタブで開きます。PDFの共有/印刷ボタンからクリーンに印刷できます。スマホではプレビュー画面の下部バーからもPDF保存・印刷ができます。',
+    desc: '「📥 PDFダウンロード（印刷）」ボタンでPDFファイルとして保存できます。印刷はダウンロードしたPDFから行ってください。スマホではプレビュー画面の下部バーからもPDF保存ができます。',
   },
   {
     id: 'tour-conveni',
@@ -1859,7 +1859,7 @@ function HelpModal({ onClose }) {
     ]},
     {id:'output',title:'📥 PDF・印刷・コンビニ印刷',content:[
       {step:'① PDFダウンロード',desc:'入力画面の「📥 PDFダウンロード」ボタンをクリックします。',detail:'A4サイズのPDFファイルがダウンロードされます。スマホではプレビュー画面の下部バー「📥 PDF」ボタンからも保存できます。'},
-      {step:'② 印刷する',desc:'入力画面の「🖨️ 印刷」ボタンをクリックします。',detail:'印刷用PDFが新しいタブで開きます。PDFの共有ボタン（↑）から「プリント」を選んで印刷してください。URL・日付が入らないクリーンな印刷ができます。スマホではプレビュー画面の下部バー「🖨️ 印刷」ボタンからも同様に印刷できます。'},
+      {step:'② 印刷する',desc:'「📥 PDFダウンロード（印刷）」ボタンでPDFを保存します。',detail:'ダウンロードしたPDFファイルを開いて印刷してください。URL・日付が入らないクリーンな書類が印刷できます。スマホではプレビュー画面の下部バー「📥 PDF（印刷）」ボタンからも保存できます。'},
       {step:'③ コンビニで印刷する',desc:'「🏪 コンビニで印刷する方法」ボタンをクリックします。',detail:'セブン・ファミマ・ローソンでの印刷手順が表示されます。'},
     ]},
   ];
@@ -2235,18 +2235,8 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       </section>
       <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
-        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード'}</button>
-        <button className="btn btn-outline" onClick={() => {
-          /* === 修正: window.print()廃止 → PDF生成して開く（URL/日付混入防止） === */
-          const el = document.getElementById('a4-preview');
-          if (!el || typeof html2pdf === 'undefined') { alert('PDFライブラリを読み込み中です。少し待ってから再度お試しください。'); return; }
-          showToast('🖨️ 印刷用PDFを生成中...');
-          const label = DOC_TYPE_LABELS[doc.type]; const num = doc.number || '番号未設定';
-          el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
-          const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
-          const win = window.open('', '_blank');
-          html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob=pdf.output('blob'); const url=URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} showToast('✅ PDFが開きました。PDFの共有/印刷ボタンから印刷してください'); }).catch(() => { restore(); if(win)win.close(); showToast('⚠️ PDF生成に失敗しました'); });
-        }}>🖨️ 印刷</button>
+        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード（印刷）'}</button>
+        <div style={{textAlign:'center',padding:'8px 0',fontSize:12,color:'#888',lineHeight:1.5}}>🖨️ 印刷はダウンロードしたPDFから行えます</div>
         <div ref={panelRef} style={{marginTop:8}}>
           <button id="tour-conveni" onClick={() => { const n=!conveniOpen; setConveniOpen(n); if(n) setTimeout(()=>panelRef.current?.scrollIntoView({behavior:'smooth',block:'start'}),50); }} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'9px 14px',background:conveniOpen?'#f1f5f9':'#fff',border:'1px solid #cbd5e1',borderRadius:8,cursor:'pointer',fontSize:13,color:'#334155',fontWeight:500}}>
             <span>🏪</span><span>コンビニで印刷する方法</span>
@@ -2481,18 +2471,8 @@ function App() {
             el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
             const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
             html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win) win.close(); });
-          }}>📥 PDF</button>
-          <button className="btn btn-print" onClick={() => {
-            /* === 修正: window.print()廃止 → PDF生成して開く（URL/日付混入防止） === */
-            const el = document.getElementById('a4-preview');
-            if (!el || typeof html2pdf === 'undefined') return;
-            const win = window.open('', '_blank');
-            const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
-            const num = state.doc.number || '番号未設定';
-            el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
-            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
-            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob=pdf.output('blob'); const url=URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win)win.close(); });
-          }}>🖨️ 印刷</button>
+          }}>📥 PDF（印刷）</button>
+          <span style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center',lineHeight:1.3,padding:'4px 0'}}>🖨️ 印刷はPDFから</span>
         </div>
       )}
       {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
