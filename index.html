@@ -2111,11 +2111,14 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     el.style.borderRadius = '0';     /* 修正追加: 角丸がキャプチャに影響するのを防止 */
     el.style.boxShadow = 'none';     /* 修正追加: 影がキャプチャ領域を拡大するのを防止 */
     const restore = () => { el.style.transform = ''; el.style.marginBottom = ''; el.style.minHeight = ''; el.style.height = ''; el.style.maxHeight = ''; el.style.overflow = ''; el.style.borderRadius = ''; el.style.boxShadow = ''; setPdfLoading(false); };
+    /* 追加: キャプチャ前にスクロール位置をリセット（左切れ防止） */
+    const mainArea = el.closest('.main-area');
+    if (mainArea) { mainArea.scrollLeft = 0; mainArea.scrollTop = 0; }
     const opt = {
       margin: 0,
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, height: 1122, windowWidth: 794, windowHeight: 1122 }, /* 修正: height/windowHeight追加でキャプチャ領域を厳密にA4以内に制限 */
+      html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, height: 1122, windowWidth: 794, windowHeight: 1122, scrollX: 0, scrollY: 0, x: 0, y: 0 }, /* 修正: scrollX/Y/x/y追加でスクロール位置によるキャプチャずれ防止 */
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(el).save().then(restore).catch(restore);
@@ -2470,7 +2473,8 @@ function App() {
             const num = state.doc.number || '番号未設定';
             el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
             const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; };
-            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win) win.close(); });
+            const mainArea2 = el.closest('.main-area'); if (mainArea2) { mainArea2.scrollLeft = 0; mainArea2.scrollTop = 0; } /* 追加: 左切れ防止 */
+            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122,scrollX:0,scrollY:0,x:0,y:0}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).toPdf().get('pdf').then(pdf => { restore(); const blob = pdf.output('blob'); const url = URL.createObjectURL(blob); if(win){win.location.href=url;}else{window.location.href=url;} }).catch(() => { restore(); if(win) win.close(); });
           }}>📥 PDF（印刷）</button>
           <span style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center',lineHeight:1.3,padding:'4px 0'}}>🖨️ 印刷はPDFから</span>
         </div>
