@@ -2034,7 +2034,7 @@ function Preview({ state }) {
   );
 }
 
-function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus, showToast /* 追加: トースト通知 */ }) {
+function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus, showToast, onRegisterPDF /* 追加: PDF関数共有 */ }) {
   const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
@@ -2076,6 +2076,10 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     };
     html2pdf().set(opt).from(el).save().then(restore).catch(restore);
   };
+  /* === 追加: PDF関数をApp側に登録（フッターバーと共有・常に最新版を参照） === */
+  const handlePDFRef_inner = useRef(handlePDF);
+  handlePDFRef_inner.current = handlePDF;
+  useEffect(() => { if (onRegisterPDF) onRegisterPDF(() => handlePDFRef_inner.current()); }, []);
 
   return (
     <div className="toolbar">
@@ -2228,6 +2232,8 @@ function App() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const showToast = msg => { clearTimeout(toastTimer.current); setToast(msg); toastTimer.current = setTimeout(() => setToast(null), 2000); };
+  /* === 追加: PDF関数共有（sidebar・フッターバー両方で同一関数を使用） === */
+  const handlePDFRef = useRef(null);
 
   // === 追加: 認証状態 ===
   const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
@@ -2359,7 +2365,7 @@ function App() {
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
-          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} />
+          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} onRegisterPDF={fn => handlePDFRef.current = fn} />
         </div>
         <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
           {/* 追加: Pro解約・プラン管理 */}
@@ -2400,16 +2406,7 @@ function App() {
         <div className="mobile-bottom-bar" id="mobile-bottom-bar">
           <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
           <button className="btn btn-pdf" onClick={() => {
-            const el = document.getElementById('a4-preview');
-            if (!el || typeof html2pdf === 'undefined') { showToast('⚠️ PDF生成に必要なライブラリが読み込まれていません'); return; }
-            showToast('⏳ PDF生成中...');
-            const bar = document.getElementById('mobile-bottom-bar');
-            if (bar) bar.style.display = 'none';
-            const label = ({'invoice':'請求書','receipt':'領収書','estimate':'見積書'})[state.doc.type] || '書類';
-            const num = state.doc.number || '番号未設定';
-            el.style.transform='none'; el.style.marginBottom='0'; el.style.minHeight='0'; el.style.height='1122px'; el.style.maxHeight='1122px'; el.style.overflow='hidden'; el.style.borderRadius='0'; el.style.boxShadow='none';
-            const restore = () => { el.style.transform=''; el.style.marginBottom=''; el.style.minHeight=''; el.style.height=''; el.style.maxHeight=''; el.style.overflow=''; el.style.borderRadius=''; el.style.boxShadow=''; if (bar) bar.style.display=''; showToast('✅ PDFを保存しました'); };
-            html2pdf().set({ margin:0, filename:label+'_'+num+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false,width:794,height:1122,windowWidth:794,windowHeight:1122}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(el).save().then(restore).catch(() => { restore(); showToast('⚠️ PDF生成に失敗しました'); });
+            if (handlePDFRef.current) { handlePDFRef.current(); } else { showToast('⚠️ PDF機能を読み込み中です'); }
           }}>📥 PDF</button>
           <button className="btn btn-print" onClick={() => { showToast('🖨️ 印刷ダイアログを開きます'); setTimeout(() => window.print(), 500); }}>🖨️ 印刷</button>
         </div>
