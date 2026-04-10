@@ -208,6 +208,13 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
     transform:scale(var(--a4-scale, 0.45));
     margin-bottom:calc((var(--a4-scale, 0.45) - 1) * 1123px);
   }
+  /* === 追加: スマホ入力欄拡大（iOS Safari自動ズーム防止：16px以上必須） === */
+  /* ※ A4プレビュー内の入力欄は対象外（書類レイアウトを壊さないため） */
+  .sidebar .input,.sidebar input,.sidebar select,.sidebar textarea,
+  .modal-box .input,.modal-box input,.modal-box select,.modal-box textarea{font-size:16px!important;padding:10px 12px!important;}
+  /* === 追加: スマホ保存ボタン・操作ボタン拡大（タップしやすく） === */
+  .save-btns .btn{padding:14px!important;font-size:14px!important;}
+  .history-item-actions .btn{padding:6px 12px!important;font-size:12px!important;min-height:36px;}
 }
 @media print{
   .mobile-tabs,.sidebar{display:none!important;}
@@ -633,7 +640,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
   );
 }
 
-function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, doc, onShowUpgrade, isPro }) {
+function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, doc, onShowUpgrade, isPro, showToast }) {
   const FREE_LIMIT = 2;
   const [tab, setTab] = useState('docs');
   const [saveName, setSaveName] = useState('');
@@ -642,10 +649,6 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all'); // 'all'|'invoice'|'receipt'|'estimate'
   const [collapsed, setCollapsed] = useState({}); // { '2026年4月': true } 月別折りたたみ
-  /* === 追加: トースト通知 === */
-  const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
-  const showToast = msg => { clearTimeout(toastTimer.current); setToast(msg); toastTimer.current = setTimeout(() => setToast(null), 2000); };
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -713,8 +716,6 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
 
   return (
     <div className="history-panel">
-      {/* === 追加: トースト通知 === */}
-      {toast && <div className="toast-notify">{toast}</div>}
       <div className="history-tabs">
         <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => { setTab('docs'); setSearch(''); setTypeFilter('all'); }}>
           📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
@@ -787,7 +788,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                       <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                     </div>
                     <div className="history-item-actions">
-                      <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                      <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
                       <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
                       <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                     </div>
@@ -801,7 +802,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                   <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                 </div>
                 <div className="history-item-actions">
-                  <button className="btn btn-outline btn-sm" onClick={() => loadDocument(d.id)}>開く</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
                   <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
                   <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                 </div>
@@ -821,7 +822,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                   <div className="history-item-meta">{t.items.length}行 · {fmtDate(t.createdAt)}</div>
                 </div>
                 <div className="history-item-actions">
-                  <button className="btn btn-outline btn-sm" onClick={() => loadTemplate(t.id)}>適用</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('このテンプレートを適用しますか？\n現在の明細内容が上書きされます。')) { loadTemplate(t.id); showToast('📋 テンプレートを適用しました'); } }}>適用</button>
                   <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('このテンプレートを削除しますか？\nこの操作は取り消せません。')) { deleteTemplate(t.id); showToast('🗑 テンプレートを削除しました'); } }}>🗑</button>
                 </div>
               </div>
@@ -2023,7 +2024,7 @@ function Preview({ state }) {
   );
 }
 
-function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus /* 追加 */ }) {
+function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus, showToast /* 追加: トースト通知 */ }) {
   const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
@@ -2163,7 +2164,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">備考</div>
         <textarea className="input" rows={3} placeholder="振込手数料はご負担ください。など" value={doc.notes} onChange={e=>setDocument({notes:e.target.value})} style={{resize:'vertical'}} />
       </section>
-      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} /></div>
+      <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
         <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード'}</button>
         <button className="btn btn-outline" onClick={() => window.print()}>🖨️ 印刷</button>
@@ -2213,6 +2214,10 @@ function App() {
   const [upgradeModal, setUpgradeModal] = useState(null); // null | 'template' | 'doc'
   const [showInstall, setShowInstall] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState(null); // 決済結果通知
+  /* === 追加: トースト通知（App最上位で管理 → sidebarのoverflow影響を回避） === */
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const showToast = msg => { clearTimeout(toastTimer.current); setToast(msg); toastTimer.current = setTimeout(() => setToast(null), 2000); };
 
   // === 追加: 認証状態 ===
   const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
@@ -2336,13 +2341,15 @@ function App() {
 
   return (
     <div className="app-layout">
+      {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
+      {toast && <div className="toast-notify">{toast}</div>}
       <div className="mobile-tabs">
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
-          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} />
+          <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} />
         </div>
         <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
           {/* 追加: Pro解約・プラン管理 */}
