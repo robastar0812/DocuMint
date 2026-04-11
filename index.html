@@ -444,7 +444,7 @@ const createEmptyItem = () => ({
 const defaultMyCompany = { name:'',postalCode:'',address:'',phone:'',fax:'',email:'',bankName:'',bankBranch:'',bankType:'普通',bankNumber:'',bankHolder:'',registrationNumber:'' };
 const defaultClient = { name:'',postalCode:'',address:'',honorific:'御中' };
 const defaultDocument = {
-  type:'invoice', number:'', issueDate: new Date().toISOString().split('T')[0],
+  type:'invoice', number:'', issueDate: (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), /* 修正: UTC→ローカル日付 */
   dueDate:'', subject:'', notes:'', items:[createEmptyItem()],
   stampPosition:{x:60,y:60}, stampImage:null, logoImage:null, logoPosition:{x:10,y:90},
 };
@@ -488,7 +488,8 @@ function useAppState() {
   const setStampPosition = pos => setDocState(p => ({...p, stampPosition: pos}));
   const setLogoImage = img => setDocState(p => ({...p, logoImage: img}));
   const setLogoPosition = pos => setDocState(p => ({...p, logoPosition: pos}));
-  const resetDocument = () => setDocState({...defaultDocument, issueDate: new Date().toISOString().split('T')[0], items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
+  const getLocalDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }; /* 追加: ローカル日付取得ヘルパー */
+  const resetDocument = () => setDocState({...defaultDocument, issueDate: getLocalDate(), items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
   const saveTemplate = name => setTemplates(p => [...p, {id:Date.now(), name, createdAt:new Date().toISOString(), subject:doc.subject, notes:doc.notes, items:doc.items}]);
   const loadTemplate = id => { const t = templates.find(t=>t.id===id); if(t) setDocState(p=>({...p,subject:t.subject,notes:t.notes,items:t.items})); };
   const deleteTemplate = id => setTemplates(p => p.filter(t=>t.id!==id));
