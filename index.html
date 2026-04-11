@@ -749,6 +749,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all'); // 'all'|'invoice'|'receipt'|'estimate'
   const [collapsed, setCollapsed] = useState({}); // { '2026年4月': true } 月別折りたたみ
+  const [saveSuccess, setSaveSuccess] = useState(null); /* 追加: 保存成功フィードバック */
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -759,7 +760,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveDocument(saveName.trim());
-      showToast('✅ 書類を保存しました'); /* 追加: トースト通知 */
+      showToast('✅ 書類を保存しました');
+      setSaveSuccess('✅ 保存しました！');
     }
     if (mode === 'saveTmpl') {
       if (!isPro && templates.length >= FREE_LIMIT) {
@@ -768,9 +770,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveTemplate(saveName.trim());
-      showToast('✅ テンプレートを保存しました'); /* 追加: トースト通知 */
+      showToast('✅ テンプレートを保存しました');
+      setSaveSuccess('✅ 保存しました！');
     }
     setSaveName(''); setMode(null);
+    setTimeout(() => setSaveSuccess(null), 2000); /* 2秒後にリセット */
   };
 
   /* 追加: 複製ハンドラ（無料制限チェック付き） */
@@ -825,6 +829,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         </button>
       </div>
       <div className="history-save-area">
+        {saveSuccess && (
+          <div style={{padding:'10px 16px',background:'#e8f5e9',border:'1px solid #a5d6a7',borderRadius:8,marginBottom:10,textAlign:'center',fontSize:14,fontWeight:700,color:'#2e7d32',animation:'fadeIn .3s ease-out'}}>
+            {saveSuccess}
+          </div>
+        )}
         {mode ? (
           <div className="save-input-row">
             <input className="input" style={{minWidth:0}} placeholder={mode==='saveDoc'?'書類名を入力':'テンプレート名を入力'} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()} autoFocus />
@@ -2477,7 +2486,7 @@ function App() {
   return (
     <div className="app-layout">
       {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
-      {toast && <div className="toast-notify">{toast}</div>}
+      {toast && <div className="toast-notify" style={{top:'auto',bottom:120}}>{toast}</div>}
       <div className="mobile-tabs">
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }} style={mobileTab==='input'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }} style={mobileTab==='preview'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>📄 プレビュー</button>
