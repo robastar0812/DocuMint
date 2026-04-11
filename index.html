@@ -455,7 +455,7 @@ const defaultMyCompany = { name:'',postalCode:'',address:'',phone:'',fax:'',emai
 const defaultClient = { name:'',postalCode:'',address:'',honorific:'御中' };
 const defaultDocument = {
   type:'invoice', number:'', issueDate: (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), /* 修正: UTC→ローカル日付 */
-  dueDate:'', subject:'', notes:'', items:[createEmptyItem()],
+  dueDate: (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), subject:'', notes:'', items:[createEmptyItem()],
   stampPosition:{x:60,y:60}, stampImage:null, logoImage:null, logoPosition:{x:10,y:90},
 };
 const defaultDocSettings = { tableHeader:'#ffffff', amountBox:'#ffffff', totalBar:'#ffffff', docFont:"'Noto Serif JP', serif" };
@@ -499,7 +499,7 @@ function useAppState() {
   const setLogoImage = img => setDocState(p => ({...p, logoImage: img}));
   const setLogoPosition = pos => setDocState(p => ({...p, logoPosition: pos}));
   const getLocalDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }; /* 追加: ローカル日付取得ヘルパー */
-  const resetDocument = () => setDocState({...defaultDocument, issueDate: getLocalDate(), items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
+  const resetDocument = () => setDocState({...defaultDocument, issueDate: getLocalDate(), dueDate: getLocalDate(), items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
   const saveTemplate = name => setTemplates(p => [...p, {id:Date.now(), name, createdAt:new Date().toISOString(), subject:doc.subject, notes:doc.notes, items:doc.items}]);
   const loadTemplate = id => { const t = templates.find(t=>t.id===id); if(t) setDocState(p=>({...p,subject:t.subject,notes:t.notes,items:t.items})); };
   const deleteTemplate = id => setTemplates(p => p.filter(t=>t.id!==id));
@@ -2255,12 +2255,12 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             </>
           ) : (
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
-              <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
-              <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
+              <div className="form-group" style={{minWidth:0}}><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+              <div className="form-group" style={{minWidth:0}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
             </div>
           )
         ) : (
-          <div className="form-group" style={{overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+          <div className="form-group" style={window.innerWidth<=500?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={window.innerWidth<=500?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
         )}
         <div className="form-group"><label className="form-label">書類番号</label><input className="input" placeholder="T1234567890123" value={doc.number} onChange={e=>setDocument({number:e.target.value})} /></div>
       </section>
