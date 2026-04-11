@@ -2479,8 +2479,8 @@ function App() {
       {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
       {toast && <div className="toast-notify">{toast}</div>}
       <div className="mobile-tabs">
-        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
-        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
+        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }} style={mobileTab==='input'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>✏️ 入力</button>
+        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }} style={mobileTab==='preview'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>📄 プレビュー</button>
       </div>
       <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column',maxWidth:'100vw'}}>
         <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column',width:'100%',minWidth:0}}>
@@ -2526,7 +2526,7 @@ function App() {
       {/* === 追加: スマホプレビュー固定フッターバー（入力に戻る・PDF・印刷） === */}
       {mobileTab === 'preview' && (
         <div className="mobile-bottom-bar">
-          <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
+          <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力に戻る</button>
           {/* === 修正: iOS Safari対策 — ref/toast/setTimeout一切なし、直接呼び出しのみ === */}
           <button className="btn btn-pdf" onClick={() => {
             const el = document.getElementById('a4-preview');
