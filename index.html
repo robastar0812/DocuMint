@@ -816,12 +816,12 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
 
   return (
     <div className="history-panel">
-      <div className="history-tabs">
+      <div className="history-tabs" style={{background:'var(--color-surface)'}}>
         <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => { setTab('docs'); setSearch(''); setTypeFilter('all'); }}>
           📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
         </button>
         <button className={`htab ${tab==='templates'?'active':''}`} onClick={() => { setTab('templates'); setSearch(''); }}>
-          📋 テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
+          📋 保存テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
         </button>
       </div>
       <div className="history-save-area">
