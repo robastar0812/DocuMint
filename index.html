@@ -1081,10 +1081,10 @@ function PhoneInput({ value, onChange, placeholder='03-0000-0000' }) {
   );
 }
 
-function CompanyModal({ myCompany, setMyCompany, onClose }) {
+function CompanyModal({ myCompany, setMyCompany, onClose, showToast }) {
   const [form, setForm] = useState({...myCompany});
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
-  const handleSave = () => { setMyCompany(form); onClose(); };
+  const handleSave = () => { setMyCompany(form); onClose(); if(showToast) showToast('✅ 自社情報を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1135,10 +1135,10 @@ function CompanyModal({ myCompany, setMyCompany, onClose }) {
   );
 }
 
-function ClientModal({ client, setClient, onClose }) {
+function ClientModal({ client, setClient, onClose, showToast }) {
   const [form, setForm] = useState({...client});
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
-  const handleSave = () => { setClient(form); onClose(); };
+  const handleSave = () => { setClient(form); onClose(); if(showToast) showToast('✅ 取引先情報を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1172,7 +1172,7 @@ function ClientModal({ client, setClient, onClose }) {
   );
 }
 
-function SettingsModal({ docSettings, setDocSettings, onClose }) {
+function SettingsModal({ docSettings, setDocSettings, onClose, showToast }) {
   const FONTS = [
     {label:'明朝体（デフォルト）',value:"'Noto Serif JP', serif"},
     {label:'ゴシック体',value:"'Noto Sans JP', sans-serif"},
@@ -1194,7 +1194,7 @@ function SettingsModal({ docSettings, setDocSettings, onClose }) {
   const pt = isMono?'#1a1a1a':'white';
   const pb = isMono?'1.5px solid #1a1a1a':'none';
 
-  const handleApply = () => { setDocSettings({tableHeader:th,amountBox:ab,totalBar:tb,docFont:font}); onClose(); };
+  const handleApply = () => { setDocSettings({tableHeader:th,amountBox:ab,totalBar:tb,docFont:font}); onClose(); if(showToast) showToast('✅ デザイン設定を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1246,7 +1246,7 @@ function SettingsModal({ docSettings, setDocSettings, onClose }) {
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-ghost" onClick={() => { setDocSettings(defaultDocSettings); onClose(); }}>リセット</button>
+          <button className="btn btn-ghost" onClick={() => { setDocSettings(defaultDocSettings); onClose(); if(showToast) showToast('🔄 デザインをリセットしました'); }}>リセット</button>
           <button className="btn btn-outline" onClick={onClose}>キャンセル</button>
           <button className="btn btn-primary" onClick={handleApply}>適用する</button>
         </div>
@@ -2252,7 +2252,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         </div>
       )}
       <div id="tour-doc-tabs" className="doc-type-tabs">
-        {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => setDocumentType(k)}>{v}</button>)}
+        {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => { if(doc.type!==k) { setDocumentType(k); showToast(`📄 ${v}に切り替えました`); } }}>{v}</button>)}
       </div>
       <section className="toolbar-section">
         <div className="section-title">書類情報</div>
@@ -2296,7 +2296,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <StampUploader doc={doc} setStampImage={img => state.setLogoImage(img)} label="ロゴ" icon="🏢" />
       </section>
       <section id="tour-items" className="toolbar-section">
-        <div className="section-title-row"><span className="section-title">明細</span><button className="btn btn-outline btn-sm" onClick={addItem}>＋ 行追加</button></div>
+        <div className="section-title-row"><span className="section-title">明細</span><button className="btn btn-outline btn-sm" onClick={() => { addItem(); showToast('＋ 行を追加しました'); setTimeout(() => { const rows = document.querySelectorAll('.item-row'); if(rows.length) rows[rows.length-1].scrollIntoView({behavior:'smooth',block:'center'}); }, 100); }}>＋ 行追加</button></div>
         <ItemsEditor doc={doc} updateItem={updateItem} removeItem={removeItem} />
       </section>
       <section id="tour-totals" className="toolbar-section totals-section">
@@ -2487,7 +2487,7 @@ function App() {
   return (
     <div className="app-layout">
       {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
-      {toast && <div className="toast-notify" style={{top:'auto',bottom:120}}>{toast}</div>}
+      {toast && <div className="toast-notify" style={{top:'40%',bottom:'auto',fontSize:16,padding:'14px 32px'}}>{toast}</div>}
       <div className="mobile-tabs">
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }} style={mobileTab==='input'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }} style={mobileTab==='preview'?{fontSize:16,fontWeight:800,padding:'16px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>📄 プレビュー</button>
@@ -2553,9 +2553,9 @@ function App() {
           <span style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center',lineHeight:1.3,padding:'4px 0'}}>🖨️ 印刷はPDFから</span>
         </div>
       )}
-      {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
-      {activeModal==='client' && <ClientModal client={client} setClient={setClient} onClose={() => setActiveModal(null)} />}
-      {activeModal==='settings' && <SettingsModal docSettings={docSettings} setDocSettings={setDocSettings} onClose={() => setActiveModal(null)} />}
+      {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} showToast={showToast} />}
+      {activeModal==='client' && <ClientModal client={client} setClient={setClient} onClose={() => setActiveModal(null)} showToast={showToast} />}
+      {activeModal==='settings' && <SettingsModal docSettings={docSettings} setDocSettings={setDocSettings} onClose={() => setActiveModal(null)} showToast={showToast} />}
       {activeModal==='help' && <HelpModal onClose={() => setActiveModal(null)} />}
       {tourStep !== null && (
         <TourOverlay
