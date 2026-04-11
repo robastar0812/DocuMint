@@ -213,6 +213,8 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   /* ※ A4プレビュー内の入力欄は対象外（書類レイアウトを壊さないため） */
   .sidebar .input,.sidebar input,.sidebar select,.sidebar textarea,
   .modal-box .input,.modal-box input,.modal-box select,.modal-box textarea{font-size:16px!important;padding-top:10px!important;padding-bottom:10px!important;padding-left:12px!important;}
+  /* 追加: iOS Safari date input右側見切れ修正（カレンダーアイコン分のpadding縮小） */
+  .sidebar input[type="date"]{padding-left:8px!important;padding-right:4px!important;}
   /* === 追加: スマホ保存ボタン・操作ボタン拡大（タップしやすく） === */
   .save-btns .btn{padding:14px!important;font-size:14px!important;}
   .history-item-actions .btn{padding:6px 12px!important;font-size:12px!important;min-height:36px;}
