@@ -199,9 +199,9 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .mobile-tabs{display:flex;background:linear-gradient(90deg,#6c3fd4,#2d7cf6);position:sticky;top:0;z-index:100;flex-shrink:0;}
   .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
   .mobile-tab.active{color:white;font-weight:700;background:rgba(255,255,255,0.12);border-bottom-color:#00d4c8;}
-  .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;}
+  .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;} /* 修正: iOS慣性スクロール有効化 */
   .sidebar.hidden{display:none!important;}.main-area.hidden{display:none!important;}
-  .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;}
+  .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;} /* 修正: iOS慣性スクロール有効化 */
   /* A4をビューポート幅に合わせて自動スケール */
   .preview-wrapper{width:100%;overflow-x:hidden;}
   .a4-paper{
@@ -551,7 +551,7 @@ const fromQty = s => { const n = parseFloat(s.replace(/,/g,'')); return isNaN(n)
 function NumInput({ value, onChange, placeholder='0', step=1, isFloat=false }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState('');
-  const handleFocus = () => { setEditing(true); setRaw(isFloat ? toQtyStr(value) : toComma(value)); };
+  const handleFocus = (e) => { setEditing(true); setRaw(isFloat ? toQtyStr(value) : toComma(value)); setTimeout(() => e.target.select(), 0); }; /* 修正: フォーカス時に全選択（既存値に追記されるのを防止） */
   const handleBlur = () => { setEditing(false); onChange(isFloat ? fromQty(raw) : fromComma(raw)); };
   const handleChange = e => setRaw(e.target.value.replace(/[^0-9.,]/g,''));
   return (
@@ -882,7 +882,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                     </div>
                     <div className="history-item-actions">
                       <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
-                      <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
+                      <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)}>📄複製</button>
                       <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                     </div>
                   </div>
@@ -896,7 +896,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </div>
                 <div className="history-item-actions">
                   <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('この書類を開きますか？\n現在の入力内容は上書きされます。')) { loadDocument(d.id); showToast('📂 書類を開きました'); } }}>開く</button>
-                  <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)} style={{fontSize:11,padding:'3px 8px'}}>📄複製</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => handleDuplicate(d.id)}>📄複製</button>
                   <button className="btn btn-ghost btn-sm del" onClick={() => { if(confirm('この書類を削除しますか？\nこの操作は取り消せません。')) { deleteDoc(d.id); showToast('🗑 書類を削除しました'); } }}>🗑</button>
                 </div>
               </div>
@@ -1160,11 +1160,11 @@ function SettingsModal({ docSettings, setDocSettings, onClose }) {
   ];
   const PRESETS = [
     {label:'モノクロ',tableHeader:'#ffffff',amountBox:'#ffffff',totalBar:'#ffffff'},
-    {label:'紺',tableHeader:'#1a2744',amountBox:'#1a2744',totalBar:'#1a2744'},
-    {label:'グリーン',tableHeader:'#1a4a2e',amountBox:'#1a4a2e',totalBar:'#1a4a2e'},
-    {label:'ネイビー',tableHeader:'#1a3a5c',amountBox:'#1a3a5c',totalBar:'#1a3a5c'},
-    {label:'ブラウン',tableHeader:'#4a3728',amountBox:'#4a3728',totalBar:'#4a3728'},
-    {label:'ブラック',tableHeader:'#1a1a1a',amountBox:'#1a1a1a',totalBar:'#1a1a1a'},
+    {label:'紺',tableHeader:'#3d5a80',amountBox:'#1a2744',totalBar:'#1a2744'},
+    {label:'グリーン',tableHeader:'#3a7a5a',amountBox:'#1a4a2e',totalBar:'#1a4a2e'},
+    {label:'ネイビー',tableHeader:'#3a6a8c',amountBox:'#1a3a5c',totalBar:'#1a3a5c'},
+    {label:'ブラウン',tableHeader:'#7a6352',amountBox:'#4a3728',totalBar:'#4a3728'},
+    {label:'ブラック',tableHeader:'#4a4a4a',amountBox:'#1a1a1a',totalBar:'#1a1a1a'},
   ];
   const [th, setTh] = useState(docSettings?.tableHeader||'#ffffff');
   const [ab, setAb] = useState(docSettings?.amountBox||'#ffffff');
@@ -2199,7 +2199,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',color:'#f59e0b',justifyContent:'center'}}>🔰 ツアー</button>
           <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',color:'#27ae60',justifyContent:'center'}}>📱 アプリ化</button>
           <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',justifyContent:'center'}}>❓ 操作説明</button>
-          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',justifyContent:'center'}}><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:16,height:16,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
+          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,whiteSpace:'nowrap',justifyContent:'center'}}><img alt="デザイン" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:16,height:16,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
         </div>
       </div>
       {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
@@ -2376,7 +2376,6 @@ function App() {
     supabaseClient.from('profiles').select('is_pro').eq('id', user.id).single().then(({ data }) => {
       if (data && data.is_pro === true && !state.isPro) {
         setIsPro(true);
-        console.log('[DocuMint] is_proフォールバック: Proに更新しました');
       }
     }).catch(() => {});
   }, [user]);
