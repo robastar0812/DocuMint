@@ -75,7 +75,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .mobile-bottom-bar{display:none;}
 
 /* ツールバー */
-.toolbar{display:flex;flex-direction:column;min-height:100%;padding-bottom:24px;}
+.toolbar{display:flex;flex-direction:column;min-height:100%;padding-bottom:24px;overflow-x:hidden;/* 修正: スマホ右側見切れ防止 */}
 .toolbar-header{display:flex;flex-direction:column;padding:10px 14px 8px;border-bottom:1px solid var(--color-border);position:sticky;top:0;background:var(--color-surface);z-index:10;}
 .toolbar-logo{font-size:17px;font-weight:900;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(90deg,#6c3fd4 0%,#2d7cf6 50%,#00d4c8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .doc-type-tabs{display:flex;border-bottom:1px solid var(--color-border);background:var(--color-surface);}
@@ -199,7 +199,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .mobile-tabs{display:flex;background:linear-gradient(90deg,#6c3fd4,#2d7cf6);position:sticky;top:0;z-index:100;flex-shrink:0;}
   .mobile-tab{flex:1;padding:14px 8px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
   .mobile-tab.active{color:white;font-weight:700;background:rgba(255,255,255,0.12);border-bottom-color:#00d4c8;}
-  .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch;} /* 修正: iOS慣性スクロール有効化 */
+  .sidebar{width:100%;min-width:unset;border-right:none;height:calc(100vh - 48px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;} /* 修正: iOS慣性スクロール有効化 + 右側見切れ防止 */
   .sidebar.hidden{display:none!important;}.main-area.hidden{display:none!important;}
   .main-area{width:100%;height:calc(100vh - 48px);padding:8px 4px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;} /* 修正: iOS慣性スクロール有効化 */
   /* A4をビューポート幅に合わせて自動スケール */
@@ -340,6 +340,8 @@ if ('serviceWorker' in navigator) {
   if (/Line\//i.test(ua)) {
     var url = location.href;
     var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    /* 修正: LINEブラウザ公式パラメータで外部ブラウザを強制起動 */
+    var externalUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
     document.addEventListener('DOMContentLoaded', function(){
       var div = document.createElement('div');
       div.id = 'line-browser-banner';
@@ -347,8 +349,8 @@ if ('serviceWorker' in navigator) {
       div.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">⚠️ LINEブラウザではPDF保存・印刷ができません</div>'
         + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
         + (isIOS
-          ? '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Safariで開く ↗</a>'
-          : '<a href="intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end;" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Chromeで開く ↗</a>')
+          ? '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Safariで開く ↗</a>'
+          : '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Chromeで開く ↗</a>')
         + '<button onclick="try{navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'✅ コピー済み\'}.bind(this))}catch(e){prompt(\'URLをコピーしてください:\',\'' + url + '\')}" style="display:inline-block;padding:8px 20px;background:rgba(255,255,255,0.2);color:white;border:1.5px solid white;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">URLをコピー</button>'
         + '</div>'
         + '<div style="margin-top:8px;font-size:11px;opacity:0.8;">右上の「⋮」→「ブラウザで開く」でもOK</div>';
