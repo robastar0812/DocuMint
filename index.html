@@ -2490,6 +2490,7 @@ function App() {
           {state.isPro && user && (
             <div style={{marginBottom:4}}>
               <button onClick={async () => {
+                const win = window.open('', '_blank'); /* 修正: fetch前に空タブを開く（PWAポップアップブロック回避） */
                 try {
                   const res = await fetch('/api/create-portal-session', {
                     method: 'POST',
@@ -2498,11 +2499,13 @@ function App() {
                   });
                   const data = await res.json();
                   if (data.url) {
-                    window.open(data.url, '_blank'); /* 修正: PWAでSafariの新タブで開く（見切れ防止） */
+                    if(win){win.location.href=data.url;}else{window.location.href=data.url;}
                   } else {
+                    if(win) win.close();
                     alert('プラン管理ページを開けませんでした。\n' + (data.error || ''));
                   }
                 } catch (err) {
+                  if(win) win.close();
                   alert('通信エラーが発生しました。');
                 }
               }} style={{background:'none',border:'1px solid #e74c3c',color:'#e74c3c',padding:'3px 10px',borderRadius:6,fontSize:9,cursor:'pointer',fontFamily:'var(--font-sans)'}}>
