@@ -323,6 +323,14 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
 .pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
 </style>
+<!-- 追加: Service Worker登録（CDNスクリプトキャッシュで起動高速化） -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').catch(function() {});
+  });
+}
+</script>
 </head>
 <body>
 <!-- 追加: LINEアプリ内ブラウザ検知 → 外部ブラウザ誘導バナー -->
@@ -2478,7 +2486,7 @@ function App() {
                   });
                   const data = await res.json();
                   if (data.url) {
-                    window.location.href = data.url;
+                    window.open(data.url, '_blank'); /* 修正: PWAでSafariの新タブで開く（見切れ防止） */
                   } else {
                     alert('プラン管理ページを開けませんでした。\n' + (data.error || ''));
                   }
