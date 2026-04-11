@@ -265,15 +265,24 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .sidebar .stamp-preview-img{width:88px!important;height:88px!important;}
   /* サイドバー：数量・単位・単価を右寄せ */
   .item-qty-row input.input{text-align:right!important;}
-  /* === 修正: iPhone右側見切れ防止 === */
-  /* サイドバー：セクション左右padding縮小 */
-  .toolbar-section{padding-left:14px!important;padding-right:14px!important;}
+  /* === 修正: iPhone右側見切れ防止（根本修正） === */
+  /* 全レイヤーのoverflow制御 */
+  .sidebar{max-width:100vw!important;}
+  .toolbar{width:100%!important;max-width:100%!important;}
+  .toolbar-section{padding-left:14px!important;padding-right:14px!important;overflow:hidden!important;max-width:100%!important;}
   .toolbar-actions{padding-left:14px!important;padding-right:14px!important;}
+  .toolbar-header{padding-left:10px!important;padding-right:10px!important;max-width:100%!important;}
+  /* form-row: 日付/期日カラムを縮小（カレンダーアイコン分のみ） */
+  .sidebar .form-row{grid-template-columns:1.4fr 1fr!important;gap:8px!important;max-width:100%!important;}
+  /* 全入力要素の溢れ防止 */
+  .sidebar .form-group{min-width:0!important;max-width:100%!important;}
+  .sidebar .input,.sidebar input,.sidebar select{max-width:100%!important;box-sizing:border-box!important;}
   /* 明細grid子要素の溢れ防止 */
   .item-qty-row .form-group{min-width:0;}
   .item-qty-row input.input{min-width:0!important;}
-  /* ヘッダーボタン行の折返し許可 */
-  .toolbar-header{padding-left:10px!important;padding-right:10px!important;max-width:100%!important;}
+  /* info-card行の溢れ防止 */
+  .info-card-row{max-width:100%!important;}
+  .info-card-row .info-card{min-width:0!important;}
 }
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
