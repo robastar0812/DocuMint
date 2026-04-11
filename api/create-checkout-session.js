@@ -1,8 +1,9 @@
 const Stripe = require('stripe');
 
 module.exports = async function handler(req, res) {
-  // CORS対応
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS対応（修正: 自ドメインに制限）
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || 'https://docu-mint-two.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
