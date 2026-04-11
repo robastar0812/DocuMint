@@ -2183,13 +2183,13 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     <div className="toolbar">
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
             <div className="toolbar-logo">DocuMint</div>
             {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
             {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',borderRadius:4,padding:'2px 6px',lineHeight:1.2,letterSpacing:'.05em'}}>PRO</span>}
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
             {/* 追加: 同期ステータス */}
             {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
             {/* 追加: ログイン/ユーザーボタン */}
@@ -2202,7 +2202,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             ) : (
               <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
             )}
-            <button className="btn btn-ghost btn-sm" onClick={resetDocument} style={{fontSize:11,padding:'4px 8px',whiteSpace:'nowrap'}}>＋ 新規</button>
+            <button className="btn btn-ghost btn-sm" onClick={resetDocument} style={{fontSize:11,padding:'4px 8px',minWidth:0}}>＋ 新規</button>
           </div>
         </div>
         {/* 2行目：ツアー・操作説明・デザイン */}
@@ -2248,9 +2248,9 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">書類情報</div>
         <div className="form-group"><label className="form-label">件名</label><input className="input" placeholder="〇〇工事 代金など" value={doc.subject} onChange={e=>setDocument({subject:e.target.value})} /></div>
         {doc.type!=='receipt' ? (
-          <div className="form-row" style={{gap:6}}>
-            <div className="form-group"><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
-            <div className="form-group"><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
+          <div style={{display:'flex',gap:6}}>
+            <div className="form-group" style={{flex:1,minWidth:0}}><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+            <div className="form-group" style={{flex:1,minWidth:0}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
           </div>
         ) : (
           <div className="form-group"><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
