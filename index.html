@@ -703,7 +703,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
       {imgSrc ? (
         <div className="stamp-preview-area">
           <img src={imgSrc} alt={label} className="stamp-preview-img" style={{background:'#f0f0f0'}} />
-          <div className="stamp-preview-info">
+          <div className="stamp-preview-info" style={{minWidth:0}}>
             <p className="stamp-hint">プレビュー上でドラッグ（PC）またはタップ長押し（スマホ）で位置調整できます</p>
             <button className="btn btn-ghost btn-sm" onClick={() => setStampImage(null)}>削除</button>
           </div>
@@ -730,7 +730,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
           </div>
           {/* スマホ用：目立つボタン */}
           <button className="btn btn-outline btn-sm"
-            style={{width:'100%',marginTop:8,justifyContent:'center'}}
+            style={{width:'100%',marginTop:8,justifyContent:'center',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}
             onClick={openFilePicker}>
             📁 ファイルを選択（スマホはこちら）
           </button>
@@ -827,7 +827,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       <div className="history-save-area">
         {mode ? (
           <div className="save-input-row">
-            <input className="input" placeholder={mode==='saveDoc'?'書類名を入力':'テンプレート名を入力'} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()} autoFocus />
+            <input className="input" style={{minWidth:0}} placeholder={mode==='saveDoc'?'書類名を入力':'テンプレート名を入力'} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()} autoFocus />
             <button className="btn btn-primary btn-sm" onClick={handleSave}>保存</button>
             <button className="btn btn-ghost btn-sm" onClick={() => { setMode(null); setSaveName(''); }}>✕</button>
           </div>
@@ -887,7 +887,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </button>
                 {!collapsed[month] && items.map(d => (
                   <div key={d.id} className="history-item">
-                    <div className="history-item-info">
+                    <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                       <div className="history-item-name">{d.name}</div>
                       <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                     </div>
@@ -901,7 +901,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
               </div>
             )) : filteredDocs.map(d => (
               <div key={d.id} className="history-item">
-                <div className="history-item-info">
+                <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                   <div className="history-item-name">{d.name}</div>
                   <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                 </div>
@@ -921,7 +921,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
            filteredTemplates.length === 0 ? <div className="history-empty">該当するテンプレートはありません</div> :
             filteredTemplates.map(t => (
               <div key={t.id} className="history-item">
-                <div className="history-item-info">
+                <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                   <div className="history-item-name">{t.name}</div>
                   <div className="history-item-meta">{t.items.length}行 · {fmtDate(t.createdAt)}</div>
                 </div>
@@ -2180,7 +2180,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   useEffect(() => { if (onRegisterPDF) onRegisterPDF(() => handlePDFRef_inner.current()); }, []);
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" style={{overflowX:'hidden',width:'100%',minWidth:0}}>
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,overflow:'hidden'}}>
@@ -2248,9 +2248,9 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">書類情報</div>
         <div className="form-group"><label className="form-label">件名</label><input className="input" placeholder="〇〇工事 代金など" value={doc.subject} onChange={e=>setDocument({subject:e.target.value})} /></div>
         {doc.type!=='receipt' ? (
-          <div style={{display:'flex',gap:6}}>
-            <div className="form-group" style={{flex:1,minWidth:0}}><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
-            <div className="form-group" style={{flex:1,minWidth:0}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
+          <div style={{display:'flex',gap:6,overflow:'hidden'}}>
+            <div className="form-group" style={{flex:1,minWidth:0,overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+            <div className="form-group" style={{flex:1,minWidth:0,overflow:'hidden'}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" style={{maxWidth:'100%'}} value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
           </div>
         ) : (
           <div className="form-group"><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
@@ -2293,7 +2293,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       </section>
       <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
-        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード（印刷）'}</button>
+        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading} style={{overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード（印刷）'}</button>
         <div style={{textAlign:'center',padding:'8px 0',fontSize:12,color:'#888',lineHeight:1.5}}>🖨️ 印刷はダウンロードしたPDFから行えます</div>
         <div ref={panelRef} style={{marginTop:8}}>
           <button id="tour-conveni" onClick={() => { const n=!conveniOpen; setConveniOpen(n); if(n) setTimeout(()=>panelRef.current?.scrollIntoView({behavior:'smooth',block:'start'}),50); }} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'9px 14px',background:conveniOpen?'#f1f5f9':'#fff',border:'1px solid #cbd5e1',borderRadius:8,cursor:'pointer',fontSize:13,color:'#334155',fontWeight:500}}>
@@ -2310,7 +2310,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
               <div style={{padding:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:cd.bg,border:`1px solid ${cd.border}`,borderRadius:8,marginBottom:14}}>
                   <span style={{fontSize:18}}>📱</span>
-                  <div><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
+                  <div style={{minWidth:0}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
                 </div>
                 <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:8}}>手順</div>
                 <ol style={{listStyle:'none',padding:0,margin:0}}>
@@ -2475,8 +2475,8 @@ function App() {
         <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
         <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
       </div>
-      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
-        <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
+      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column',maxWidth:'100vw'}}>
+        <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column',width:'100%',minWidth:0}}>
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} onRegisterPDF={fn => handlePDFRef.current = fn} />
         </div>
         <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
