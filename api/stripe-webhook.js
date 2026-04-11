@@ -14,6 +14,7 @@ function readRawBody(req) {
 }
 
 // Supabase profiles.is_pro を更新するヘルパー
+// 修正: auth.usersの全件取得を廃止 → profilesテーブルをemailで直接更新（ユーザー数制限なし）
 async function updateIsPro(email, isPro) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -22,41 +23,16 @@ async function updateIsPro(email, isPro) {
     throw new Error('SUPABASE_URL または SUPABASE_SERVICE_ROLE_KEY が未設定です');
   }
 
-  // メールアドレスからユーザーIDを取得（auth.users テーブル）
-  const usersRes = await fetch(
-    `${supabaseUrl}/auth/v1/admin/users`,
-    {
-      headers: {
-        'apikey': serviceRoleKey,
-        'Authorization': `Bearer ${serviceRoleKey}`,
-      },
-    }
-  );
-
-  if (!usersRes.ok) {
-    throw new Error(`Supabase users取得失敗: ${usersRes.status}`);
-  }
-
-  const usersData = await usersRes.json();
-  const user = usersData.users
-    ? usersData.users.find(u => u.email === email)
-    : null;
-
-  if (!user) {
-    console.error(`[Webhook] ユーザーが見つかりません: ${email}`);
-    return false;
-  }
-
-  // profiles テーブルの is_pro を更新
+  // profilesテーブルをメールアドレスで直接更新（auth.usersを経由しない）
   const updateRes = await fetch(
-    `${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}`,
+    `${supabaseUrl}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}`,
     {
       method: 'PATCH',
       headers: {
         'apikey': serviceRoleKey,
         'Authorization': `Bearer ${serviceRoleKey}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
+        'Prefer': 'return=representation',
       },
       body: JSON.stringify({ is_pro: isPro }),
     }
@@ -64,6 +40,13 @@ async function updateIsPro(email, isPro) {
 
   if (!updateRes.ok) {
     throw new Error(`Supabase更新失敗: ${updateRes.status}`);
+  }
+
+  // 更新結果を確認（0件 = 該当ユーザーなし）
+  const updated = await updateRes.json();
+  if (!updated || updated.length === 0) {
+    console.error(`[Webhook] profilesにユーザーが見つかりません: ${email}`);
+    return false;
   }
 
   console.log(`[Webhook] ${email} の is_pro を ${isPro} に更新しました`);
