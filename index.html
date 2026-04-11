@@ -224,6 +224,42 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .mobile-bottom-bar .btn-print{background:rgba(255,255,255,.15);color:white;}
   /* 追加: プレビューエリアの下余白（固定バーに隠れないように） */
   .main-area{padding-bottom:70px!important;}
+  /* === 追加: スマホ全体フォントサイズ拡大（A4プレビュー内は対象外） === */
+  /* サイドバー：セクションタイトル 11→13px */
+  .sidebar .section-title{font-size:13px!important;}
+  /* サイドバー：フォームラベル 12→14px */
+  .sidebar .form-label{font-size:14px!important;}
+  /* サイドバー：カードラベル 10→12px、カード値 13→15px */
+  .sidebar .info-card-label{font-size:12px!important;}
+  .sidebar .info-card-value{font-size:15px!important;}
+  /* サイドバー：タブボタン 12→14px */
+  .doc-type-tabs .tab-btn{font-size:14px!important;padding:12px 4px!important;}
+  /* サイドバー：小計表示 14→16px */
+  .sidebar .item-subtotal{font-size:16px!important;}
+  /* サイドバー：合計セクション 13→15px、合計行 16→18px */
+  .sidebar .total-row{font-size:15px!important;}
+  .sidebar .total-row.grand{font-size:18px!important;}
+  /* サイドバー：ツールバーボタン 13→15px */
+  .sidebar .toolbar-actions .btn{font-size:15px!important;}
+  /* サイドバー：保存ボタン 14→15px */
+  .save-btns .btn{font-size:15px!important;}
+  /* サイドバー：消費税セレクト幅修正（10%見切れ防止） */
+  .tax-rate-select{width:82px!important;}
+  .tax-select{width:90px!important;}
+  /* モバイルタブ 13→15px */
+  .mobile-tab{font-size:15px!important;}
+  /* モーダル：タイトル 16→18px */
+  .modal-title{font-size:18px!important;}
+  /* モーダル：フォームラベル 12→14px */
+  .modal-box .form-label{font-size:14px!important;}
+  /* モーダル：本文テキスト 14→15px */
+  .modal-body{font-size:15px!important;}
+  /* モーダル：ボタン 13→15px */
+  .modal-footer .btn{font-size:15px!important;padding:12px 20px!important;}
+  /* フッターバー 13→14px */
+  .mobile-bottom-bar .btn{font-size:14px!important;}
+  /* 書類履歴 操作ボタン 12→13px */
+  .history-item-actions .btn{font-size:13px!important;}
 }
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
