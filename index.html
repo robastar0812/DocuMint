@@ -76,7 +76,8 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 
 /* ツールバー */
 .toolbar{display:flex;flex-direction:column;min-height:100%;padding-bottom:24px;overflow-x:hidden;/* 修正: スマホ右側見切れ防止 */}
-.toolbar-header{display:flex;flex-direction:column;padding:10px 14px 8px;border-bottom:1px solid var(--color-border);position:sticky;top:0;background:var(--color-surface);z-index:10;}
+.toolbar-header{display:flex;flex-direction:column;padding:10px 14px 8px;border-bottom:1px solid var(--color-border);position:sticky;top:0;background:var(--color-surface);z-index:10;max-width:100%;/* 修正: 右側見切れ防止 */}
+.toolbar-header>div{min-width:0;max-width:100%;/* 修正: flex子要素の溢れ防止 */}
 .toolbar-logo{font-size:17px;font-weight:900;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(90deg,#6c3fd4 0%,#2d7cf6 50%,#00d4c8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .doc-type-tabs{display:flex;border-bottom:1px solid var(--color-border);background:var(--color-surface);}
 .tab-btn{flex:1;padding:10px 4px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.03em;}
@@ -264,6 +265,15 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
   .sidebar .stamp-preview-img{width:88px!important;height:88px!important;}
   /* サイドバー：数量・単位・単価を右寄せ */
   .item-qty-row input.input{text-align:right!important;}
+  /* === 修正: iPhone右側見切れ防止 === */
+  /* サイドバー：セクション左右padding縮小 */
+  .toolbar-section{padding-left:14px!important;padding-right:14px!important;}
+  .toolbar-actions{padding-left:14px!important;padding-right:14px!important;}
+  /* 明細grid子要素の溢れ防止 */
+  .item-qty-row .form-group{min-width:0;}
+  .item-qty-row input.input{min-width:0!important;}
+  /* ヘッダーボタン行の折返し許可 */
+  .toolbar-header{padding-left:10px!important;padding-right:10px!important;max-width:100%!important;}
 }
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
@@ -562,7 +572,7 @@ const fromQty = s => { const n = parseFloat(s.replace(/,/g,'')); return isNaN(n)
 function NumInput({ value, onChange, placeholder='0', step=1, isFloat=false }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState('');
-  const handleFocus = (e) => { setEditing(true); setRaw(isFloat ? toQtyStr(value) : toComma(value)); setTimeout(() => e.target.select(), 0); }; /* 修正: フォーカス時に全選択（既存値に追記されるのを防止） */
+  const handleFocus = (e) => { const el = e.target; setEditing(true); setRaw(isFloat ? toQtyStr(value) : toComma(value)); setTimeout(() => { try { el.select(); } catch(ex){} }, 50); }; /* 修正: iOS再レンダリング競合回避（delay50ms＋target保持） */
   const handleBlur = () => { setEditing(false); onChange(isFloat ? fromQty(raw) : fromComma(raw)); };
   const handleChange = e => setRaw(e.target.value.replace(/[^0-9.,]/g,''));
   return (
