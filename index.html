@@ -341,21 +341,18 @@ if ('serviceWorker' in navigator) {
   var ua = navigator.userAgent || '';
   if (/Line\//i.test(ua)) {
     var url = location.href;
-    var isIOS = /iPhone|iPad|iPod/i.test(ua);
     /* 修正: LINEブラウザ公式パラメータで外部ブラウザを強制起動 */
     var externalUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
     document.addEventListener('DOMContentLoaded', function(){
       var div = document.createElement('div');
       div.id = 'line-browser-banner';
-      div.style.cssText = 'background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);color:white;padding:12px 16px;font-family:sans-serif;font-size:13px;text-align:center;line-height:1.5;';
-      div.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">⚠️ LINEブラウザではPDF保存・印刷ができません</div>'
-        + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
-        + (isIOS
-          ? '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Safariで開く ↗</a>'
-          : '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Chromeで開く ↗</a>')
-        + '<button onclick="try{navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'✅ コピー済み\'}.bind(this))}catch(e){prompt(\'URLをコピーしてください:\',\'' + url + '\')}" style="display:inline-block;padding:8px 20px;background:rgba(255,255,255,0.2);color:white;border:1.5px solid white;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">URLをコピー</button>'
-        + '</div>'
-        + '<div style="margin-top:8px;font-size:11px;opacity:0.8;">右上の「⋮」→「ブラウザで開く」でもOK</div>';
+      div.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f0ece4;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;text-align:center;';
+      div.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>'
+        + '<div style="font-size:20px;font-weight:900;color:#1a2744;margin-bottom:8px;line-height:1.4;">LINEブラウザでは<br>ご利用いただけません</div>'
+        + '<div style="font-size:14px;color:#6b6560;margin-bottom:24px;line-height:1.6;">PDF保存・印刷などの機能が<br>正常に動作しません。</div>'
+        + '<a href="' + externalUrl + '" style="display:block;width:100%;max-width:320px;padding:16px 24px;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);color:white;border-radius:12px;font-weight:900;text-decoration:none;font-size:18px;margin-bottom:12px;text-align:center;">ブラウザで開く ↗</a>'
+        + '<button onclick="try{navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'✅ コピー済み\'}.bind(this))}catch(e){prompt(\'URLをコピーしてください:\',\'' + url + '\')}" style="display:block;width:100%;max-width:320px;padding:14px 24px;background:white;color:#1a2744;border:2px solid #d4cfc6;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;text-align:center;">URLをコピー</button>'
+        + '<div style="margin-top:20px;font-size:12px;color:#9b9590;line-height:1.6;">または右上の「⋮」→<br>「ブラウザで開く」でもOK</div>';
       document.body.insertBefore(div, document.body.firstChild);
     });
   }
