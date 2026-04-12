@@ -2206,11 +2206,11 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     <div className="toolbar" style={{overflowX:'hidden',width:'100%',minWidth:0}}>
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'18px 0',overflow:'hidden'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
             <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
             {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
-            {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',borderRadius:4,padding:'2px 6px',lineHeight:1.2,letterSpacing:'.05em'}}>PRO</span>}
+            {isPro && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
             {/* 追加: 同期ステータス */}
@@ -2229,7 +2229,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           </div>
         </div>
         {/* 2行目：ツアー・操作説明・デザイン */}
-        <div style={{display:'flex',gap:4,overflow:'hidden'}}>
+        <div style={{display:'flex',gap:8,overflow:'hidden'}}>
           <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:13,padding:'12px 0',color:'#f59e0b',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>🔰 ツアー</button>
           <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:13,padding:'12px 0',color:'#27ae60',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>📱 アプリ化</button>
           <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>❓ 操作説明</button>
