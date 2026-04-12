@@ -16,12 +16,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DocuMint">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<!-- 追加: CDN事前接続で読み込み高速化 -->
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="manifest" href="/manifest.json">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><!-- 追加: Supabase -->
+<!-- 変更: html2pdfはPDF生成時のみ使用のためasync化（初回読み込み高速化） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" async></script>
+<!-- 変更: React/Babel/Supabaseをbodyへ移動（ローディング画面を先に描画するため） -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -339,27 +341,38 @@ if ('serviceWorker' in navigator) {
   var ua = navigator.userAgent || '';
   if (/Line\//i.test(ua)) {
     var url = location.href;
-    var isIOS = /iPhone|iPad|iPod/i.test(ua);
     /* 修正: LINEブラウザ公式パラメータで外部ブラウザを強制起動 */
     var externalUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
     document.addEventListener('DOMContentLoaded', function(){
       var div = document.createElement('div');
       div.id = 'line-browser-banner';
-      div.style.cssText = 'background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);color:white;padding:12px 16px;font-family:sans-serif;font-size:13px;text-align:center;line-height:1.5;';
-      div.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">⚠️ LINEブラウザではPDF保存・印刷ができません</div>'
-        + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">'
-        + (isIOS
-          ? '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Safariで開く ↗</a>'
-          : '<a href="' + externalUrl + '" style="display:inline-block;padding:8px 20px;background:white;color:#1a2744;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">Chromeで開く ↗</a>')
-        + '<button onclick="try{navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'✅ コピー済み\'}.bind(this))}catch(e){prompt(\'URLをコピーしてください:\',\'' + url + '\')}" style="display:inline-block;padding:8px 20px;background:rgba(255,255,255,0.2);color:white;border:1.5px solid white;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">URLをコピー</button>'
-        + '</div>'
-        + '<div style="margin-top:8px;font-size:11px;opacity:0.8;">右上の「⋮」→「ブラウザで開く」でもOK</div>';
+      div.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f0ece4;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;text-align:center;';
+      div.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>'
+        + '<div style="font-size:20px;font-weight:900;color:#1a2744;margin-bottom:8px;line-height:1.4;">LINEブラウザでは<br>ご利用いただけません</div>'
+        + '<div style="font-size:14px;color:#6b6560;margin-bottom:24px;line-height:1.6;">PDF保存・印刷などの機能が<br>正常に動作しません。</div>'
+        + '<a href="' + externalUrl + '" style="display:block;width:100%;max-width:320px;padding:16px 24px;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);color:white;border-radius:12px;font-weight:900;text-decoration:none;font-size:18px;margin-bottom:12px;text-align:center;">ブラウザで開く ↗</a>'
+        + '<button onclick="try{navigator.clipboard.writeText(\'' + url + '\').then(function(){this.textContent=\'✅ コピー済み\'}.bind(this))}catch(e){prompt(\'URLをコピーしてください:\',\'' + url + '\')}" style="display:block;width:100%;max-width:320px;padding:14px 24px;background:white;color:#1a2744;border:2px solid #d4cfc6;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;text-align:center;">URLをコピー</button>'
+        + '<div style="margin-top:20px;font-size:12px;color:#9b9590;line-height:1.6;">または右上の「⋮」→<br>「ブラウザで開く」でもOK</div>';
       document.body.insertBefore(div, document.body.firstChild);
     });
   }
 })();
 </script>
-<div id="root"></div>
+<div id="root">
+<!-- ローディング画面: React起動時に自動消滅 -->
+<div id="app-loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f0ece4;font-family:'Noto Sans JP',sans-serif;">
+<div style="position:relative;">
+<div style="font-size:32px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:8ch;animation:ldType 2.5s steps(8) infinite;border-right:3px solid #6c3fd4;">DocuMint</div>
+</div>
+<div style="font-size:12px;font-weight:700;margin-top:10px;letter-spacing:.15em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:6ch;animation:ldType2 2.5s steps(6) infinite;border-right:2px solid #6c3fd4;">ドキュミント</div>
+<style>@keyframes ldType{0%{max-width:0}50%,80%{max-width:8ch}100%{max-width:0}}@keyframes ldType2{0%{max-width:0}50%,80%{max-width:6ch}100%{max-width:0}}#app-loader [style*="border-right"]{animation-name:ldType,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(8),step-end;animation-iteration-count:infinite}#app-loader div:last-of-type[style*="6ch"]{animation-name:ldType2,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(6),step-end;animation-iteration-count:infinite}@keyframes ldBlink{50%{border-color:transparent}}</style>
+</div>
+</div>
+<!-- 変更: bodyに移動してローディング画面を先に描画 -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script type="text/babel">
 const { useState, useRef, useCallback, useEffect } = React;
 
@@ -455,7 +468,7 @@ const defaultMyCompany = { name:'',postalCode:'',address:'',phone:'',fax:'',emai
 const defaultClient = { name:'',postalCode:'',address:'',honorific:'御中' };
 const defaultDocument = {
   type:'invoice', number:'', issueDate: (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), /* 修正: UTC→ローカル日付 */
-  dueDate:'', subject:'', notes:'', items:[createEmptyItem()],
+  dueDate: (() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), subject:'', notes:'', items:[createEmptyItem()],
   stampPosition:{x:60,y:60}, stampImage:null, logoImage:null, logoPosition:{x:10,y:90},
 };
 const defaultDocSettings = { tableHeader:'#ffffff', amountBox:'#ffffff', totalBar:'#ffffff', docFont:"'Noto Serif JP', serif" };
@@ -499,7 +512,7 @@ function useAppState() {
   const setLogoImage = img => setDocState(p => ({...p, logoImage: img}));
   const setLogoPosition = pos => setDocState(p => ({...p, logoPosition: pos}));
   const getLocalDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }; /* 追加: ローカル日付取得ヘルパー */
-  const resetDocument = () => setDocState({...defaultDocument, issueDate: getLocalDate(), items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
+  const resetDocument = () => setDocState({...defaultDocument, issueDate: getLocalDate(), dueDate: getLocalDate(), items:[createEmptyItem()], stampImage: doc.stampImage, logoImage: doc.logoImage});
   const saveTemplate = name => setTemplates(p => [...p, {id:Date.now(), name, createdAt:new Date().toISOString(), subject:doc.subject, notes:doc.notes, items:doc.items}]);
   const loadTemplate = id => { const t = templates.find(t=>t.id===id); if(t) setDocState(p=>({...p,subject:t.subject,notes:t.notes,items:t.items})); };
   const deleteTemplate = id => setTemplates(p => p.filter(t=>t.id!==id));
@@ -703,7 +716,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
       {imgSrc ? (
         <div className="stamp-preview-area">
           <img src={imgSrc} alt={label} className="stamp-preview-img" style={{background:'#f0f0f0'}} />
-          <div className="stamp-preview-info">
+          <div className="stamp-preview-info" style={{minWidth:0}}>
             <p className="stamp-hint">プレビュー上でドラッグ（PC）またはタップ長押し（スマホ）で位置調整できます</p>
             <button className="btn btn-ghost btn-sm" onClick={() => setStampImage(null)}>削除</button>
           </div>
@@ -730,7 +743,7 @@ function StampUploader({ doc, setStampImage, label='角印', icon='🔏' }) {
           </div>
           {/* スマホ用：目立つボタン */}
           <button className="btn btn-outline btn-sm"
-            style={{width:'100%',marginTop:8,justifyContent:'center'}}
+            style={{width:'100%',marginTop:8,justifyContent:'center',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}
             onClick={openFilePicker}>
             📁 ファイルを選択（スマホはこちら）
           </button>
@@ -749,6 +762,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all'); // 'all'|'invoice'|'receipt'|'estimate'
   const [collapsed, setCollapsed] = useState({}); // { '2026年4月': true } 月別折りたたみ
+  const [saveSuccess, setSaveSuccess] = useState(null); /* 追加: 保存成功フィードバック */
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -759,7 +773,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveDocument(saveName.trim());
-      showToast('✅ 書類を保存しました'); /* 追加: トースト通知 */
+      showToast('✅ 書類を保存しました');
+      setSaveSuccess('✅ 保存しました！');
     }
     if (mode === 'saveTmpl') {
       if (!isPro && templates.length >= FREE_LIMIT) {
@@ -768,9 +783,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         return;
       }
       saveTemplate(saveName.trim());
-      showToast('✅ テンプレートを保存しました'); /* 追加: トースト通知 */
+      showToast('✅ テンプレートを保存しました');
+      setSaveSuccess('✅ 保存しました！');
     }
     setSaveName(''); setMode(null);
+    setTimeout(() => setSaveSuccess(null), 2000); /* 2秒後にリセット */
   };
 
   /* 追加: 複製ハンドラ（無料制限チェック付き） */
@@ -816,18 +833,23 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
 
   return (
     <div className="history-panel">
-      <div className="history-tabs">
+      <div className="history-tabs" style={{background:'var(--color-surface)'}}>
         <button className={`htab ${tab==='docs'?'active':''}`} onClick={() => { setTab('docs'); setSearch(''); setTypeFilter('all'); }}>
           📂 保存書類 {savedDocs.length > 0 && <span className="badge">{savedDocs.length}</span>}
         </button>
         <button className={`htab ${tab==='templates'?'active':''}`} onClick={() => { setTab('templates'); setSearch(''); }}>
-          📋 テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
+          📋 保存テンプレート {templates.length > 0 && <span className="badge">{templates.length}</span>}
         </button>
       </div>
       <div className="history-save-area">
+        {saveSuccess && (
+          <div style={{padding:'10px 16px',background:'#e8f5e9',border:'1px solid #a5d6a7',borderRadius:8,marginBottom:10,textAlign:'center',fontSize:14,fontWeight:700,color:'#2e7d32',animation:'fadeIn .3s ease-out'}}>
+            {saveSuccess}
+          </div>
+        )}
         {mode ? (
           <div className="save-input-row">
-            <input className="input" placeholder={mode==='saveDoc'?'書類名を入力':'テンプレート名を入力'} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()} autoFocus />
+            <input className="input" style={{minWidth:0}} placeholder={mode==='saveDoc'?'書類名を入力':'テンプレート名を入力'} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()} autoFocus />
             <button className="btn btn-primary btn-sm" onClick={handleSave}>保存</button>
             <button className="btn btn-ghost btn-sm" onClick={() => { setMode(null); setSaveName(''); }}>✕</button>
           </div>
@@ -887,7 +909,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
                 </button>
                 {!collapsed[month] && items.map(d => (
                   <div key={d.id} className="history-item">
-                    <div className="history-item-info">
+                    <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                       <div className="history-item-name">{d.name}</div>
                       <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                     </div>
@@ -901,7 +923,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
               </div>
             )) : filteredDocs.map(d => (
               <div key={d.id} className="history-item">
-                <div className="history-item-info">
+                <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                   <div className="history-item-name">{d.name}</div>
                   <div className="history-item-meta">{DOC_TYPE_LABELS[d.type]} · {fmtDate(d.savedAt)}</div>
                 </div>
@@ -921,7 +943,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
            filteredTemplates.length === 0 ? <div className="history-empty">該当するテンプレートはありません</div> :
             filteredTemplates.map(t => (
               <div key={t.id} className="history-item">
-                <div className="history-item-info">
+                <div className="history-item-info" style={{minWidth:0,overflow:"hidden"}}>
                   <div className="history-item-name">{t.name}</div>
                   <div className="history-item-meta">{t.items.length}行 · {fmtDate(t.createdAt)}</div>
                 </div>
@@ -1072,10 +1094,10 @@ function PhoneInput({ value, onChange, placeholder='03-0000-0000' }) {
   );
 }
 
-function CompanyModal({ myCompany, setMyCompany, onClose }) {
+function CompanyModal({ myCompany, setMyCompany, onClose, showToast }) {
   const [form, setForm] = useState({...myCompany});
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
-  const handleSave = () => { setMyCompany(form); onClose(); };
+  const handleSave = () => { setMyCompany(form); onClose(); if(showToast) showToast('✅ 自社情報を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1126,10 +1148,10 @@ function CompanyModal({ myCompany, setMyCompany, onClose }) {
   );
 }
 
-function ClientModal({ client, setClient, onClose }) {
+function ClientModal({ client, setClient, onClose, showToast }) {
   const [form, setForm] = useState({...client});
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
-  const handleSave = () => { setClient(form); onClose(); };
+  const handleSave = () => { setClient(form); onClose(); if(showToast) showToast('✅ 取引先情報を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1163,7 +1185,7 @@ function ClientModal({ client, setClient, onClose }) {
   );
 }
 
-function SettingsModal({ docSettings, setDocSettings, onClose }) {
+function SettingsModal({ docSettings, setDocSettings, onClose, showToast }) {
   const FONTS = [
     {label:'明朝体（デフォルト）',value:"'Noto Serif JP', serif"},
     {label:'ゴシック体',value:"'Noto Sans JP', sans-serif"},
@@ -1185,7 +1207,7 @@ function SettingsModal({ docSettings, setDocSettings, onClose }) {
   const pt = isMono?'#1a1a1a':'white';
   const pb = isMono?'1.5px solid #1a1a1a':'none';
 
-  const handleApply = () => { setDocSettings({tableHeader:th,amountBox:ab,totalBar:tb,docFont:font}); onClose(); };
+  const handleApply = () => { setDocSettings({tableHeader:th,amountBox:ab,totalBar:tb,docFont:font}); onClose(); if(showToast) showToast('✅ デザイン設定を保存しました'); };
   return (
     <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)e.currentTarget._closeOnUp=true;}}
         onMouseUp={e=>{if(e.currentTarget._closeOnUp&&e.target===e.currentTarget){e.currentTarget._closeOnUp=false;onClose();}}}>
@@ -1237,7 +1259,7 @@ function SettingsModal({ docSettings, setDocSettings, onClose }) {
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-ghost" onClick={() => { setDocSettings(defaultDocSettings); onClose(); }}>リセット</button>
+          <button className="btn btn-ghost" onClick={() => { setDocSettings(defaultDocSettings); onClose(); if(showToast) showToast('🔄 デザインをリセットしました'); }}>リセット</button>
           <button className="btn btn-outline" onClick={onClose}>キャンセル</button>
           <button className="btn btn-primary" onClick={handleApply}>適用する</button>
         </div>
@@ -2134,11 +2156,12 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
   const [conveniStore, setConveniStore] = useState('seven');
+  const [newDocSuccess, setNewDocSuccess] = useState(false); /* 追加: 新規ボタンフィードバック */
   const panelRef = useRef(null);
 
   const CONVENI = {
-    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',steps:['セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','アプリでPDFをアップロードして予約番号（8桁）を取得','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
-    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',steps:['ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','アプリでPDFをアップロードしてユーザー番号（8桁）を取得','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
+    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
+    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',steps:['アプリでPDFをアップロードしてユーザー番号（8桁）を取得','ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
   };
   const cd = CONVENI[conveniStore];
 
@@ -2180,16 +2203,16 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   useEffect(() => { if (onRegisterPDF) onRegisterPDF(() => handlePDFRef_inner.current()); }, []);
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" style={{overflowX:'hidden',width:'100%',minWidth:0}}>
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <div className="toolbar-logo">DocuMint</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
+            <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
             {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
-            {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#6c3fd4,#2d7cf6)',borderRadius:4,padding:'2px 6px',lineHeight:1.2,letterSpacing:'.05em'}}>PRO</span>}
+            {isPro && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
             {/* 追加: 同期ステータス */}
             {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
             {/* 追加: ログイン/ユーザーボタン */}
@@ -2202,15 +2225,15 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             ) : (
               <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
             )}
-            <button className="btn btn-ghost btn-sm" onClick={resetDocument} style={{fontSize:11,padding:'4px 8px',whiteSpace:'nowrap'}}>＋ 新規</button>
+            <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s'}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
           </div>
         </div>
         {/* 2行目：ツアー・操作説明・デザイン */}
-        <div style={{display:'flex',gap:4}}>
-          <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',color:'#f59e0b',justifyContent:'center'}}>🔰 ツアー</button>
-          <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',color:'#27ae60',justifyContent:'center'}}>📱 アプリ化</button>
-          <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:11,padding:'4px 0',whiteSpace:'nowrap',justifyContent:'center'}}>❓ 操作説明</button>
-          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,whiteSpace:'nowrap',justifyContent:'center'}}><img alt="デザイン" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:16,height:16,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
+        <div style={{display:'flex',gap:8,overflow:'hidden'}}>
+          <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:13,padding:'12px 0',color:'#f59e0b',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>🔰 ツアー</button>
+          <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:13,padding:'12px 0',color:'#27ae60',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>📱 アプリ化</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>❓ 操作説明</button>
+          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}><img alt="デザイン" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:20,height:20,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
         </div>
       </div>
       {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
@@ -2242,16 +2265,27 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         </div>
       )}
       <div id="tour-doc-tabs" className="doc-type-tabs">
-        {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => setDocumentType(k)}>{v}</button>)}
+        {Object.entries(DOC_TYPE_LABELS).map(([k,v]) => <button key={k} className={`tab-btn ${doc.type===k?'active':''}`} onClick={() => { if(doc.type!==k) { setDocumentType(k); showToast(`📄 ${v}に切り替えました`); } }}>{v}</button>)}
       </div>
       <section className="toolbar-section">
         <div className="section-title">書類情報</div>
         <div className="form-group"><label className="form-label">件名</label><input className="input" placeholder="〇〇工事 代金など" value={doc.subject} onChange={e=>setDocument({subject:e.target.value})} /></div>
-        <div className="form-row" style={{gridTemplateColumns:'1fr auto'}}>
-          <div className="form-group"><label className="form-label">書類番号</label><input className="input" placeholder="INV-001" value={doc.number} onChange={e=>setDocument({number:e.target.value})} /></div>
-          <div className="form-group"><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} style={{width:145}} /></div>
-        </div>
-        {doc.type!=='receipt' && <div className="form-group"><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} style={{width:145}} /></div>}
+        {doc.type!=='receipt' ? (
+          window.innerWidth <= 500 ? (
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+              <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
+            </div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <div className="form-group" style={{minWidth:0}}><label className="form-label">発行日</label><input type="date" className="input" value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+              <div className="form-group" style={{minWidth:0}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
+            </div>
+          )
+        ) : (
+          <div className="form-group" style={window.innerWidth<=500?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={window.innerWidth<=500?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+        )}
+        <div className="form-group"><label className="form-label">書類番号</label><input className="input" placeholder="T1234567890123" value={doc.number} onChange={e=>setDocument({number:e.target.value})} /></div>
       </section>
       <section className="toolbar-section">
         <div className="section-title">会社情報</div>
@@ -2275,7 +2309,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <StampUploader doc={doc} setStampImage={img => state.setLogoImage(img)} label="ロゴ" icon="🏢" />
       </section>
       <section id="tour-items" className="toolbar-section">
-        <div className="section-title-row"><span className="section-title">明細</span><button className="btn btn-outline btn-sm" onClick={addItem}>＋ 行追加</button></div>
+        <div className="section-title-row"><span className="section-title">明細</span><button className="btn btn-outline btn-sm" onClick={() => { addItem(); showToast('＋ 行を追加しました'); setTimeout(() => { const rows = document.querySelectorAll('.item-row'); if(rows.length) rows[rows.length-1].scrollIntoView({behavior:'smooth',block:'center'}); }, 100); }}>＋ 行追加</button></div>
         <ItemsEditor doc={doc} updateItem={updateItem} removeItem={removeItem} />
       </section>
       <section id="tour-totals" className="toolbar-section totals-section">
@@ -2289,7 +2323,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       </section>
       <div id="tour-history"><HistoryPanel templates={templates} saveTemplate={saveTemplate} loadTemplate={loadTemplate} deleteTemplate={deleteTemplate} savedDocs={savedDocs} saveDocument={saveDocument} loadDocument={loadDocument} deleteDoc={deleteDoc} duplicateDocument={duplicateDocument} doc={doc} onShowUpgrade={onShowUpgrade} isPro={isPro} showToast={showToast} /></div>
       <div id="tour-pdf" className="toolbar-actions">
-        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード（印刷）'}</button>
+        <button className="btn btn-primary" onClick={handlePDF} disabled={pdfLoading} style={{overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{pdfLoading ? '⏳ PDF生成中...' : '📥 PDFダウンロード（印刷）'}</button>
         <div style={{textAlign:'center',padding:'8px 0',fontSize:12,color:'#888',lineHeight:1.5}}>🖨️ 印刷はダウンロードしたPDFから行えます</div>
         <div ref={panelRef} style={{marginTop:8}}>
           <button id="tour-conveni" onClick={() => { const n=!conveniOpen; setConveniOpen(n); if(n) setTimeout(()=>panelRef.current?.scrollIntoView({behavior:'smooth',block:'start'}),50); }} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'9px 14px',background:conveniOpen?'#f1f5f9':'#fff',border:'1px solid #cbd5e1',borderRadius:8,cursor:'pointer',fontSize:13,color:'#334155',fontWeight:500}}>
@@ -2306,7 +2340,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
               <div style={{padding:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:cd.bg,border:`1px solid ${cd.border}`,borderRadius:8,marginBottom:14}}>
                   <span style={{fontSize:18}}>📱</span>
-                  <div><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
+                  <div style={{minWidth:0}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
                 </div>
                 <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:8}}>手順</div>
                 <ol style={{listStyle:'none',padding:0,margin:0}}>
@@ -2466,13 +2500,13 @@ function App() {
   return (
     <div className="app-layout">
       {/* === 追加: トースト通知（App最上位に配置 → sidebarのoverflow影響を回避） === */}
-      {toast && <div className="toast-notify">{toast}</div>}
+      {toast && <div className="toast-notify" style={{top:'40%',bottom:'auto',fontSize:16,padding:'14px 32px'}}>{toast}</div>}
       <div className="mobile-tabs">
-        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
-        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }}>📄 プレビュー</button>
+        <button className={`mobile-tab ${mobileTab==='input'?'active':''}`} onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }} style={mobileTab==='input'?{fontSize:13,fontWeight:700,padding:'10px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>✏️ 入力</button>
+        <button className={`mobile-tab ${mobileTab==='preview'?'active':''}`} onClick={() => { setMobileTab('preview'); window.scrollTo(0,0); }} style={mobileTab==='preview'?{fontSize:13,fontWeight:700,padding:'10px 8px'}:{background:'rgba(245,245,245,0.92)',color:'rgba(0,0,0,0.35)',fontSize:12}}>📄 プレビュー</button>
       </div>
-      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column'}}>
-        <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column'}}>
+      <aside className={`sidebar ${mobileTab==='preview'?'hidden':''}`} style={{display:'flex',flexDirection:'column',maxWidth:'100vw'}}>
+        <div style={{flex:1,overflowY:'auto',overflowX:'hidden',display:'flex',flexDirection:'column',width:'100%',minWidth:0}}>
           <Toolbar state={state} onStartTour={startTour} onShowUpgrade={setUpgradeModal} onShowInstall={() => setShowInstall(true)} user={user} onShowAuth={() => setShowAuth(true)} onSignOut={handleSignOut} syncStatus={syncStatus} showToast={showToast} onRegisterPDF={fn => handlePDFRef.current = fn} />
         </div>
         <div style={{flexShrink:0,padding:'6px 16px',borderTop:'1px solid var(--color-border)',textAlign:'center',fontSize:10,color:'var(--color-text-light)',letterSpacing:'0.04em',background:'var(--color-surface)',lineHeight:1.6}}>
@@ -2515,7 +2549,7 @@ function App() {
       {/* === 追加: スマホプレビュー固定フッターバー（入力に戻る・PDF・印刷） === */}
       {mobileTab === 'preview' && (
         <div className="mobile-bottom-bar">
-          <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力</button>
+          <button className="btn btn-back" onClick={() => { setMobileTab('input'); window.scrollTo(0,0); }}>✏️ 入力に戻る</button>
           {/* === 修正: iOS Safari対策 — ref/toast/setTimeout一切なし、直接呼び出しのみ === */}
           <button className="btn btn-pdf" onClick={() => {
             const el = document.getElementById('a4-preview');
@@ -2532,9 +2566,9 @@ function App() {
           <span style={{fontSize:11,color:'rgba(255,255,255,.7)',textAlign:'center',lineHeight:1.3,padding:'4px 0'}}>🖨️ 印刷はPDFから</span>
         </div>
       )}
-      {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} />}
-      {activeModal==='client' && <ClientModal client={client} setClient={setClient} onClose={() => setActiveModal(null)} />}
-      {activeModal==='settings' && <SettingsModal docSettings={docSettings} setDocSettings={setDocSettings} onClose={() => setActiveModal(null)} />}
+      {activeModal==='myCompany' && <CompanyModal myCompany={myCompany} setMyCompany={setMyCompany} onClose={() => setActiveModal(null)} showToast={showToast} />}
+      {activeModal==='client' && <ClientModal client={client} setClient={setClient} onClose={() => setActiveModal(null)} showToast={showToast} />}
+      {activeModal==='settings' && <SettingsModal docSettings={docSettings} setDocSettings={setDocSettings} onClose={() => setActiveModal(null)} showToast={showToast} />}
       {activeModal==='help' && <HelpModal onClose={() => setActiveModal(null)} />}
       {tourStep !== null && (
         <TourOverlay
