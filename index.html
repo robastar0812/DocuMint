@@ -890,7 +890,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       )}
       {/* 追加: タイプフィルター（書類タブかつ3件以上で表示） */}
       {tab==='docs' && savedDocs.length >= 3 && (
-        <div style={{padding:'6px 16px',borderBottom:'1px solid var(--color-border)',display:'flex',gap:4,flexWrap:'wrap'}}>
+        <div style={{padding:'6px 16px',borderBottom:'1px solid var(--color-border)',display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontSize:11,fontWeight:700,color:'var(--color-text-muted)',marginRight:4}}>絞り込み</span>
           {[['all','全て'],['invoice','請求書'],['receipt','領収書'],['estimate','見積書']].map(([k,v]) => (
             <button key={k} onClick={() => setTypeFilter(k)} style={{padding:'3px 10px',borderRadius:99,border:'1px solid',borderColor:typeFilter===k?'var(--color-primary)':'var(--color-border)',background:typeFilter===k?'var(--color-primary)':'transparent',color:typeFilter===k?'white':'var(--color-text-muted)',fontSize:11,fontWeight:typeFilter===k?700:400,cursor:'pointer',fontFamily:'var(--font-sans)'}}>{v}</button>
           ))}
