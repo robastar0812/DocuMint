@@ -359,13 +359,17 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <div id="root">
-<!-- ローディング画面: React起動時に自動消滅 -->
+<!-- ローディング画面: React起動時に自動消滅 / 変更: transformベースでメインスレッドブロック中もアニメーション継続 -->
 <div id="app-loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f0ece4;font-family:'Noto Sans JP',sans-serif;">
-<div style="position:relative;">
-<div style="font-size:32px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:8ch;animation:ldType 2.5s steps(8) infinite;border-right:3px solid #6c3fd4;">DocuMint</div>
+<div style="position:relative;overflow:hidden;display:inline-block;">
+<div style="font-size:32px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;">DocuMint</div>
+<div style="position:absolute;top:0;bottom:0;left:0;right:0;background:#f0ece4;border-left:3px solid #6c3fd4;will-change:transform;animation:ldReveal 2.5s steps(8) infinite,ldBlink .6s step-end infinite;"></div>
 </div>
-<div style="font-size:12px;font-weight:700;margin-top:10px;letter-spacing:.15em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:6ch;animation:ldType2 2.5s steps(6) infinite;border-right:2px solid #6c3fd4;">ドキュミント</div>
-<style>@keyframes ldType{0%{max-width:0}50%,80%{max-width:8ch}100%{max-width:0}}@keyframes ldType2{0%{max-width:0}50%,80%{max-width:6ch}100%{max-width:0}}#app-loader [style*="border-right"]{animation-name:ldType,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(8),step-end;animation-iteration-count:infinite}#app-loader div:last-of-type[style*="6ch"]{animation-name:ldType2,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(6),step-end;animation-iteration-count:infinite}@keyframes ldBlink{50%{border-color:transparent}}</style>
+<div style="position:relative;overflow:hidden;display:inline-block;margin-top:10px;">
+<div style="font-size:12px;font-weight:700;letter-spacing:.15em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;">ドキュミント</div>
+<div style="position:absolute;top:0;bottom:0;left:0;right:0;background:#f0ece4;border-left:2px solid #6c3fd4;will-change:transform;animation:ldReveal 2.5s steps(6) infinite,ldBlink .6s step-end infinite;"></div>
+</div>
+<style>@keyframes ldReveal{0%{transform:translateX(0)}50%,80%{transform:translateX(100%)}100%{transform:translateX(0)}}@keyframes ldBlink{50%{border-color:transparent}}</style>
 </div>
 </div>
 <!-- 変更: bodyに移動してローディング画面を先に描画 -->
@@ -2161,8 +2165,8 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   const panelRef = useRef(null);
 
   const CONVENI = {
-    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
-    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',steps:['アプリでPDFをアップロードしてユーザー番号（8桁）を取得','ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
+    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',appStore:'https://apps.apple.com/jp/app/id1562641276',playStore:'https://play.google.com/store/apps/details?id=com.fujifilm.fb.mcopy&hl=ja',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
+    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',appStore:'https://apps.apple.com/jp/app/id454644833',playStore:'https://play.google.com/store/apps/details?id=jp.co.sharp.printsystem.networkprint&hl=ja',steps:['アプリでPDFをアップロードしてユーザー番号（8桁）を取得','ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
   };
   const cd = CONVENI[conveniStore];
 
@@ -2341,7 +2345,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
               <div style={{padding:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:cd.bg,border:`1px solid ${cd.border}`,borderRadius:8,marginBottom:14}}>
                   <span style={{fontSize:18}}>📱</span>
-                  <div style={{minWidth:0}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
+                  <div style={{minWidth:0,flex:1}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div>{/* 追加: ストアリンクボタン */}<div style={{display:'flex',gap:6,marginTop:6}}><a href={cd.appStore} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 10px',background:'#000',color:'#fff',borderRadius:6,fontSize:10,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap'}}>🍎 App Store</a><a href={cd.playStore} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 10px',background:'#01875f',color:'#fff',borderRadius:6,fontSize:10,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap'}}>▶ Google Play</a></div></div>
                 </div>
                 <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:8}}>手順</div>
                 <ol style={{listStyle:'none',padding:0,margin:0}}>
