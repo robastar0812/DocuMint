@@ -776,6 +776,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         onShowUpgrade && onShowUpgrade('doc');
         return;
       }
+      /* 追加: 書類名の重複チェック */
+      if (savedDocs.some(d => d.name === saveName.trim())) {
+        showToast('⚠️ 同じ名前の書類が既にあります');
+        return;
+      }
       saveDocument(saveName.trim());
       showToast('✅ 書類を保存しました');
       setSaveSuccess('✅ 保存しました！');
@@ -784,6 +789,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       if (!isPro && templates.length >= FREE_LIMIT) {
         setSaveName(''); setMode(null);
         onShowUpgrade && onShowUpgrade('template');
+        return;
+      }
+      /* 追加: テンプレート名の重複チェック */
+      if (templates.some(t => t.name === saveName.trim())) {
+        showToast('⚠️ 同じ名前のテンプレートが既にあります');
         return;
       }
       saveTemplate(saveName.trim());
@@ -869,7 +879,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => { setMode('saveTmpl'); setTab('templates'); }}
               style={{position:'relative'}}>
-              ＋ テンプレート保存
+              ＋ テンプレートを保存
               {!isPro && <span style={{marginLeft:6,fontSize:10,color:templates.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
                 {templates.length}/{FREE_LIMIT}
               </span>}
@@ -1931,7 +1941,7 @@ function HelpModal({ onClose }) {
       {step:'① 書類を保存する',desc:'「💾 書類を保存」ボタンをクリックします。',detail:'書類名を入力してEnterキーまたは「保存」ボタンを押します。保存が完了すると「✅ 書類を保存しました」のトースト通知が画面上部に表示されます。'},
       {step:'② 書類を開く',desc:'保存書類の「開く」ボタンをクリックします。',detail:'現在の入力内容が上書きされるため確認ダイアログが表示されます。「OK」を押すと書類が読み込まれます。'},
       {step:'③ 書類を複製する',desc:'保存書類の「📄複製」ボタンをクリックします。',detail:'同じ内容の書類が「（コピー）」付きで複製されます。先月の請求書を流用したい時に便利です。'},
-      {step:'④ 保存テンプレートを使う',desc:'「＋ テンプレート保存」ボタンで明細パターンを保存できます。',detail:'テンプレートの「適用」ボタンで明細が読み込まれます。適用時は確認ダイアログが表示されます。'},
+      {step:'④ 保存テンプレートを使う',desc:'「＋ テンプレートを保存」ボタンで明細パターンを保存できます。',detail:'テンプレートの「適用」ボタンで明細が読み込まれます。適用時は確認ダイアログが表示されます。'},
       {step:'⑤ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保存していない書類は消えますのでご注意ください。'},
       {step:'⑥ 検索・フィルター（有料プラン）',desc:'書類が3件以上になると検索バーと「検索」ボタンが表示されます。',detail:'書類名で検索できます。検索欄の✕ボタンで検索をクリアできます。タイプフィルターで請求書・領収書・見積書を絞り込めます。5件以上で月別グループ表示になります。'},
     ]},
