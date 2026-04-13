@@ -315,7 +315,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* === 追加: トースト通知 === */
-.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
+.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10001;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -341,7 +341,7 @@ if ('serviceWorker' in navigator) {
 (function(){
   var ua = navigator.userAgent || '';
   if (/Line\//i.test(ua)) {
-    var url = location.href;
+    var url = location.href.replace(/[&'"<>]/g, function(c){return '&#'+c.charCodeAt(0)+';';});
     /* 修正: LINEブラウザ公式パラメータで外部ブラウザを強制起動 */
     var externalUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
     document.addEventListener('DOMContentLoaded', function(){
@@ -2425,6 +2425,13 @@ function App() {
   // === 追加: 認証状態 ===
   const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
   const [showAuth, setShowAuth] = useState(false);
+
+  // === 追加: モーダル表示中の背景スクロールロック（モバイルSafari対策） ===
+  useEffect(() => {
+    const anyModal = !!(activeModal || upgradeModal || showInstall || showAuth);
+    if (anyModal) { document.body.style.overflow = 'hidden'; } else { document.body.style.overflow = ''; }
+    return () => { document.body.style.overflow = ''; };
+  }, [activeModal, upgradeModal, showInstall, showAuth]);
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
   const prevUserId = useRef(null);
   const isLoadingFromCloud = useRef(false); // 追加: クラウド読込中フラグ（不要な再保存防止）
