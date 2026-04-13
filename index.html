@@ -2176,7 +2176,13 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   const [conveniStore, setConveniStore] = useState('seven');
   const [newDocSuccess, setNewDocSuccess] = useState(false); /* 追加: 新規ボタンフィードバック */
   const panelRef = useRef(null);
-  const isPC = window.innerWidth > 768;
+  const [isPC, setIsPC] = useState(window.innerWidth > 768);
+  const [isNarrow, setIsNarrow] = useState(window.innerWidth <= 500);
+  useEffect(() => {
+    const onResize = () => { setIsPC(window.innerWidth > 768); setIsNarrow(window.innerWidth <= 500); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const CONVENI = {
     seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',appStore:'https://apps.apple.com/jp/app/id1562641276',playStore:'https://play.google.com/store/apps/details?id=com.fujifilm.fb.mcopy&hl=ja',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
@@ -2309,7 +2315,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">書類情報</div>
         <div className="form-group"><label className="form-label">件名</label><input className="input" placeholder="〇〇工事 代金など" value={doc.subject} onChange={e=>setDocument({subject:e.target.value})} /></div>
         {doc.type!=='receipt' ? (
-          window.innerWidth <= 500 ? (
+          isNarrow ? (
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
               <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
               <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
@@ -2321,7 +2327,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             </div>
           )
         ) : (
-          <div className="form-group" style={window.innerWidth<=500?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={window.innerWidth<=500?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+          <div className="form-group" style={isNarrow?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={isNarrow?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
         )}
         <div className="form-group"><label className="form-label">書類番号</label><input className="input" placeholder="T1234567890123" value={doc.number} onChange={e=>setDocument({number:e.target.value})} /></div>
       </section>
