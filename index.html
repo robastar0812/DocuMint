@@ -2222,10 +2222,10 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
-          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
-            <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
+          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden',flexShrink:1}}>
+            <div className="toolbar-logo" style={{fontSize:22}}>DocuMint</div>
             {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
-            {isPro && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+            {isPro && <span style={{fontSize:10,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'3px 8px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)',flexShrink:0}}>✦ PRO</span>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
             {/* 追加: 同期ステータス */}
