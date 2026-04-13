@@ -2229,7 +2229,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
               <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
               {isPro && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:6,overflow:'hidden'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,overflow:'hidden',justifyContent:'flex-end'}}>
               {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
               {user ? (
                 <div style={{position:'relative'}}>
