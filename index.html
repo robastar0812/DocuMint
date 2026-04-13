@@ -302,7 +302,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 /* 追加: 認証UI */
 .auth-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--color-border-dark);border-radius:var(--radius-md);background:transparent;font-family:var(--font-sans);font-size:11px;font-weight:500;color:var(--color-primary);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .auth-btn:hover{background:var(--color-surface);border-color:var(--color-primary);}
-.auth-btn.logged-in{border-color:#27ae60;color:#27ae60;font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.auth-btn.logged-in{border-color:#27ae60;color:#27ae60;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;}
 .auth-tabs{display:flex;margin-bottom:20px;border-bottom:2px solid var(--color-border);}
 .auth-tab{flex:1;padding:10px;border:none;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
 .auth-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
@@ -2221,25 +2221,24 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     <div className="toolbar" style={{overflowX:'hidden',width:'100%',minWidth:0}}>
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
         {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
+        {/* 1行目: ロゴ + ユーザー + 新規 — 変更: PRO時はロゴがゴールド化、PROバッジはユーザーボタン内に移動（PC320px対応） */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
-          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
-            <div className="toolbar-logo" style={{fontSize:24}}>DocuMint</div>
-          </div>
+          <div className="toolbar-logo" style={isPro?{fontSize:28,background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)'}:{fontSize:28}}>DocuMint</div>
           <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
             {/* 追加: 同期ステータス */}
             {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
             {/* 追加: ログイン/ユーザーボタン */}
             {user ? (
-              <div style={{position:'relative'}}>
-                <button className="auth-btn logged-in" onClick={onSignOut} title={user.email} style={isPro?{borderColor:'#daa520',color:'#b8860b'}:{}}>
-                  {isPro && <span style={{fontSize:9,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:4,padding:'1px 5px',lineHeight:1.2}}>PRO</span>}
+              <div style={{position:'relative',minWidth:0,overflow:'hidden'}}>
+                <button className="auth-btn logged-in" onClick={onSignOut} title={user.email} style={isPro?{borderColor:'#daa520'}:{}}>
+                  {isPro && <span style={{fontSize:8,fontWeight:800,color:'#b8860b',marginRight:2}}>PRO</span>}
                   👤 {user.email.split('@')[0]}
                 </button>
               </div>
             ) : (
               <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
             )}
-            <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s'}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
+            <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s',flexShrink:0}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
           </div>
         </div>
         {/* 2行目：ツアー・操作説明・デザイン */}
