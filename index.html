@@ -2275,7 +2275,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         </div>
       </div>
       {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
-      {!isPro && (
+      {!(isPro && user) && (
         <div className="pro-marquee" onClick={() => onShowUpgrade('upgrade')}>
           <div className="pro-marquee-track">
             <span>✨ 月額¥500で書類保存・テンプレートが無制限</span>
@@ -2292,7 +2292,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         </div>
       )}
       {/* === 追加: Proユーザー用ゴールドマーキー（感謝＋機能リマインド） === */}
-      {isPro && (
+      {isPro && user && (
         <div className="pro-marquee-gold">
           <div className="pro-marquee-track">
             <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
