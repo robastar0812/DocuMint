@@ -81,11 +81,11 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .toolbar-header{display:flex;flex-direction:column;padding:10px 14px 8px;border-bottom:1px solid var(--color-border);position:sticky;top:0;background:var(--color-surface);z-index:10;}
 .toolbar-logo{font-size:17px;font-weight:900;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(90deg,#6c3fd4 0%,#2d7cf6 50%,#00d4c8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .doc-type-tabs{display:flex;border-bottom:1px solid var(--color-border);background:var(--color-surface);}
-.tab-btn{flex:1;padding:10px 4px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.03em;}
+.tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.03em;}
 .tab-btn:hover{color:var(--color-primary);}
-.tab-btn.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:white;}
+.tab-btn.active{color:var(--color-primary);font-weight:700;border-bottom-color:var(--color-primary);background:white;}
 .toolbar-section{padding:16px 20px;border-bottom:1px solid var(--color-border);}
-.section-title{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:12px;}
+.section-title{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--color-text);text-transform:uppercase;margin-bottom:12px;}
 .section-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .section-title-row .section-title{margin-bottom:0;}
 .info-cards{display:flex;flex-direction:column;gap:8px;}
@@ -111,6 +111,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .item-delete{color:var(--color-accent)!important;font-size:16px!important;padding:2px 6px!important;}
 .item-qty-row{display:grid;grid-template-columns:1.8fr 1.8fr 2.5fr;gap:8px;}
 .item-qty-row .form-group{margin-bottom:0;}
+.item-qty-row input.input{text-align:right;}
 .item-tax-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px dashed var(--color-border);}
 .tax-selects{display:flex;gap:6px;}
 .tax-select{width:80px;}.tax-rate-select{width:72px;}
@@ -189,6 +190,11 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .doc-stamp.dragging{cursor:grabbing;opacity:.95;}
 
 @media screen and (max-width:1100px){.a4-paper{transform:scale(0.85);margin-bottom:-120px;}}
+@media screen and (min-width:901px){
+  /* CHANGED: PC版ヘッダー収まり修正 */
+  .toolbar-logo{font-size:20px;}
+  .auth-btn.logged-in{max-width:70px;}
+}
 @media screen and (max-width:900px){.a4-paper{transform:scale(0.7);margin-bottom:-240px;}.sidebar{width:280px;min-width:280px;}}
 /* PC幅では hidden クラスを無効化・両カラム表示 */
 @media screen and (min-width:769px){
@@ -302,7 +308,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 /* 追加: 認証UI */
 .auth-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--color-border-dark);border-radius:var(--radius-md);background:transparent;font-family:var(--font-sans);font-size:11px;font-weight:500;color:var(--color-primary);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .auth-btn:hover{background:var(--color-surface);border-color:var(--color-primary);}
-.auth-btn.logged-in{border-color:#27ae60;color:#27ae60;font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.auth-btn.logged-in{border-color:#27ae60;color:#27ae60;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;}
 .auth-tabs{display:flex;margin-bottom:20px;border-bottom:2px solid var(--color-border);}
 .auth-tab{flex:1;padding:10px;border:none;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
 .auth-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);}
@@ -314,7 +320,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .sync-indicator.syncing{color:#f59e0b;border-color:#fde68a;background:#fffbeb;}
 .sync-indicator.synced{color:#27ae60;border-color:#bbf7d0;background:#f0fdf4;}
 /* === 追加: トースト通知 === */
-.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
+.toast-notify{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10001;padding:12px 24px;border-radius:10px;background:#1a2744;color:white;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.3);animation:toastIn .3s ease-out;pointer-events:none;white-space:nowrap;}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* 追加: Pro宣伝マーキー */
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -340,7 +346,7 @@ if ('serviceWorker' in navigator) {
 (function(){
   var ua = navigator.userAgent || '';
   if (/Line\//i.test(ua)) {
-    var url = location.href;
+    var url = location.href.replace(/[&'"<>]/g, function(c){return '&#'+c.charCodeAt(0)+';';});
     /* 修正: LINEブラウザ公式パラメータで外部ブラウザを強制起動 */
     var externalUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
     document.addEventListener('DOMContentLoaded', function(){
@@ -359,13 +365,17 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <div id="root">
-<!-- ローディング画面: React起動時に自動消滅 -->
+<!-- ローディング画面: React起動時に自動消滅 / 変更: transformベースでメインスレッドブロック中もアニメーション継続 -->
 <div id="app-loader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f0ece4;font-family:'Noto Sans JP',sans-serif;">
-<div style="position:relative;">
-<div style="font-size:32px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:8ch;animation:ldType 2.5s steps(8) infinite;border-right:3px solid #6c3fd4;">DocuMint</div>
+<div style="position:relative;overflow:hidden;display:inline-block;">
+<div style="font-size:32px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;">DocuMint</div>
+<div style="position:absolute;top:0;bottom:0;left:0;right:0;background:#f0ece4;border-left:3px solid #6c3fd4;will-change:transform;animation:ldReveal 2.5s steps(8) infinite,ldBlink .6s step-end infinite;"></div>
 </div>
-<div style="font-size:12px;font-weight:700;margin-top:10px;letter-spacing:.15em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;max-width:6ch;animation:ldType2 2.5s steps(6) infinite;border-right:2px solid #6c3fd4;">ドキュミント</div>
-<style>@keyframes ldType{0%{max-width:0}50%,80%{max-width:8ch}100%{max-width:0}}@keyframes ldType2{0%{max-width:0}50%,80%{max-width:6ch}100%{max-width:0}}#app-loader [style*="border-right"]{animation-name:ldType,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(8),step-end;animation-iteration-count:infinite}#app-loader div:last-of-type[style*="6ch"]{animation-name:ldType2,ldBlink;animation-duration:2.5s,.6s;animation-timing-function:steps(6),step-end;animation-iteration-count:infinite}@keyframes ldBlink{50%{border-color:transparent}}</style>
+<div style="position:relative;overflow:hidden;display:inline-block;margin-top:10px;">
+<div style="font-size:12px;font-weight:700;letter-spacing:.15em;background:linear-gradient(90deg,#6c3fd4,#2d7cf6,#00d4c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;">ドキュミント</div>
+<div style="position:absolute;top:0;bottom:0;left:0;right:0;background:#f0ece4;border-left:2px solid #6c3fd4;will-change:transform;animation:ldReveal 2.5s steps(6) infinite,ldBlink .6s step-end infinite;"></div>
+</div>
+<style>@keyframes ldReveal{0%{transform:translateX(0)}50%,80%{transform:translateX(100%)}100%{transform:translateX(0)}}@keyframes ldBlink{50%{border-color:transparent}}</style>
 </div>
 </div>
 <!-- 変更: bodyに移動してローディング画面を先に描画 -->
@@ -772,6 +782,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
         onShowUpgrade && onShowUpgrade('doc');
         return;
       }
+      /* 追加: 書類名の重複チェック */
+      if (savedDocs.some(d => d.name === saveName.trim())) {
+        showToast('⚠️ 同じ名前の書類が既にあります');
+        return;
+      }
       saveDocument(saveName.trim());
       showToast('✅ 書類を保存しました');
       setSaveSuccess('✅ 保存しました！');
@@ -780,6 +795,11 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       if (!isPro && templates.length >= FREE_LIMIT) {
         setSaveName(''); setMode(null);
         onShowUpgrade && onShowUpgrade('template');
+        return;
+      }
+      /* 追加: テンプレート名の重複チェック */
+      if (templates.some(t => t.name === saveName.trim())) {
+        showToast('⚠️ 同じ名前のテンプレートが既にあります');
         return;
       }
       saveTemplate(saveName.trim());
@@ -865,7 +885,7 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => { setMode('saveTmpl'); setTab('templates'); }}
               style={{position:'relative'}}>
-              ＋ テンプレート保存
+              ＋ テンプレートを保存
               {!isPro && <span style={{marginLeft:6,fontSize:10,color:templates.length>=FREE_LIMIT?'#c0392b':'#27ae60',fontWeight:700}}>
                 {templates.length}/{FREE_LIMIT}
               </span>}
@@ -890,7 +910,8 @@ function HistoryPanel({ templates, saveTemplate, loadTemplate, deleteTemplate, s
       )}
       {/* 追加: タイプフィルター（書類タブかつ3件以上で表示） */}
       {tab==='docs' && savedDocs.length >= 3 && (
-        <div style={{padding:'6px 16px',borderBottom:'1px solid var(--color-border)',display:'flex',gap:4,flexWrap:'wrap'}}>
+        <div style={{padding:'6px 16px',borderBottom:'1px solid var(--color-border)',display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
+          <span style={{fontSize:11,fontWeight:700,color:'var(--color-text-muted)',marginRight:4}}>絞り込み</span>
           {[['all','全て'],['invoice','請求書'],['receipt','領収書'],['estimate','見積書']].map(([k,v]) => (
             <button key={k} onClick={() => setTypeFilter(k)} style={{padding:'3px 10px',borderRadius:99,border:'1px solid',borderColor:typeFilter===k?'var(--color-primary)':'var(--color-border)',background:typeFilter===k?'var(--color-primary)':'transparent',color:typeFilter===k?'white':'var(--color-text-muted)',fontSize:11,fontWeight:typeFilter===k?700:400,cursor:'pointer',fontFamily:'var(--font-sans)'}}>{v}</button>
           ))}
@@ -1550,48 +1571,50 @@ function AuthModal({ onClose, onLogin }) {
           <div className="modal-title">{tab==='reset'?'パスワードリセット':'アカウント'}</div>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
         </div>
+        <form autoComplete="on" onSubmit={e=>{e.preventDefault();tab==='login'?handleLogin():tab==='signup'?handleSignup():handleReset();}}>
         <div className="modal-body">
           {tab !== 'reset' && (
             <div className="auth-tabs">
-              <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>{setTab('login');setMsg(null);}}>ログイン</button>
-              <button className={`auth-tab ${tab==='signup'?'active':''}`} onClick={()=>{setTab('signup');setMsg(null);}}>新規登録</button>
+              <button type="button" className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>{setTab('login');setMsg(null);}}>ログイン</button>
+              <button type="button" className={`auth-tab ${tab==='signup'?'active':''}`} onClick={()=>{setTab('signup');setMsg(null);}}>新規登録</button>
             </div>
           )}
           {msg && <div className={`auth-msg ${msg.type}`}>{msg.text}</div>}
           <div className="form-group">
             <label className="form-label">メールアドレス</label>
-            <input className="input" type="email" placeholder="example@mail.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(tab==='login'?handleLogin():tab==='signup'?handleSignup():handleReset())} />
+            <input className="input" type="email" name="email" autoComplete="email" placeholder="example@mail.com" value={email} onChange={e=>setEmail(e.target.value)} />
           </div>
           {tab !== 'reset' && (
             <div className="form-group">
               <label className="form-label">パスワード{tab==='signup'?' （6文字以上）':''}</label>
-              <input className="input" type="password" placeholder="••••••" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(tab==='login'?handleLogin():handleSignup())} />
+              <input className="input" type="password" name="password" autoComplete={tab==='login'?'current-password':'new-password'} placeholder="••••••" value={password} onChange={e=>setPassword(e.target.value)} />
             </div>
           )}
         </div>
         <div className="modal-footer" style={{flexDirection:'column',gap:8}}>
           {tab === 'login' && (
             <>
-              <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleLogin} disabled={loading}>
+              <button type="submit" className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} disabled={loading}>
                 {loading ? '⏳ ログイン中...' : '🔑 ログイン'}
               </button>
-              <button className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={()=>{setTab('reset');setMsg(null);}}>パスワードを忘れた方</button>
+              <button type="button" className="btn btn-ghost btn-sm" style={{fontSize:11}} onClick={()=>{setTab('reset');setMsg(null);}}>パスワードを忘れた方</button>
             </>
           )}
           {tab === 'signup' && (
-            <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleSignup} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} disabled={loading}>
               {loading ? '⏳ 登録中...' : '✨ 無料アカウント作成'}
             </button>
           )}
           {tab === 'reset' && (
             <>
-              <button className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleReset} disabled={loading}>
+              <button type="submit" className="btn btn-primary" style={{width:'100%',justifyContent:'center'}} disabled={loading}>
                 {loading ? '⏳ 送信中...' : '📧 リセットメール送信'}
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={()=>{setTab('login');setMsg(null);}}>← ログインに戻る</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={()=>{setTab('login');setMsg(null);}}>← ログインに戻る</button>
             </>
           )}
         </div>
+        </form>
         {/* 追加: ログインメリット説明 */}
         <div style={{padding:'0 28px 20px'}}>
           <div style={{background:'linear-gradient(135deg,#f0f4ff,#f5f0ff)',border:'1px solid #e0d8f0',borderRadius:10,padding:'14px 16px'}}>
@@ -1926,7 +1949,7 @@ function HelpModal({ onClose }) {
       {step:'① 書類を保存する',desc:'「💾 書類を保存」ボタンをクリックします。',detail:'書類名を入力してEnterキーまたは「保存」ボタンを押します。保存が完了すると「✅ 書類を保存しました」のトースト通知が画面上部に表示されます。'},
       {step:'② 書類を開く',desc:'保存書類の「開く」ボタンをクリックします。',detail:'現在の入力内容が上書きされるため確認ダイアログが表示されます。「OK」を押すと書類が読み込まれます。'},
       {step:'③ 書類を複製する',desc:'保存書類の「📄複製」ボタンをクリックします。',detail:'同じ内容の書類が「（コピー）」付きで複製されます。先月の請求書を流用したい時に便利です。'},
-      {step:'④ 保存テンプレートを使う',desc:'「＋ テンプレート保存」ボタンで明細パターンを保存できます。',detail:'テンプレートの「適用」ボタンで明細が読み込まれます。適用時は確認ダイアログが表示されます。'},
+      {step:'④ 保存テンプレートを使う',desc:'「＋ テンプレートを保存」ボタンで明細パターンを保存できます。',detail:'テンプレートの「適用」ボタンで明細が読み込まれます。適用時は確認ダイアログが表示されます。'},
       {step:'⑤ 新規書類を作成する',desc:'画面左上の「＋ 新規」ボタンをクリックします。',detail:'現在の入力内容がリセットされます。保存していない書類は消えますのでご注意ください。'},
       {step:'⑥ 検索・フィルター（有料プラン）',desc:'書類が3件以上になると検索バーと「検索」ボタンが表示されます。',detail:'書類名で検索できます。検索欄の✕ボタンで検索をクリアできます。タイプフィルターで請求書・領収書・見積書を絞り込めます。5件以上で月別グループ表示になります。'},
     ]},
@@ -2158,10 +2181,17 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   const [conveniStore, setConveniStore] = useState('seven');
   const [newDocSuccess, setNewDocSuccess] = useState(false); /* 追加: 新規ボタンフィードバック */
   const panelRef = useRef(null);
+  const [isPC, setIsPC] = useState(window.innerWidth > 768);
+  const [isNarrow, setIsNarrow] = useState(window.innerWidth <= 500);
+  useEffect(() => {
+    const onResize = () => { setIsPC(window.innerWidth > 768); setIsNarrow(window.innerWidth <= 500); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const CONVENI = {
-    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
-    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',steps:['アプリでPDFをアップロードしてユーザー番号（8桁）を取得','ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
+    seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',appStore:'https://apps.apple.com/jp/app/id1562641276',playStore:'https://play.google.com/store/apps/details?id=com.fujifilm.fb.mcopy&hl=ja',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
+    famima:{label:'ファミマ・ローソン',color:'#0066b3',bg:'#f0f6ff',border:'#a3c4e8',app:'ネットワークプリント',appStore:'https://apps.apple.com/jp/app/id454644833',playStore:'https://play.google.com/store/apps/details?id=jp.co.sharp.printsystem.networkprint&hl=ja',steps:['アプリでPDFをアップロードしてユーザー番号（8桁）を取得','ファミリーマート／ローソンのマルチコピー機に行く','「プリントサービス」→「ネットワークプリント」を選択','コピー機にユーザー番号を入力','ファイルを選択し用紙・カラー・部数を確認','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['ユーザー番号の有効期限は登録から7日間','ファイルサイズは10MB以内']},
   };
   const cd = CONVENI[conveniStore];
 
@@ -2205,39 +2235,58 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   return (
     <div className="toolbar" style={{overflowX:'hidden',width:'100%',minWidth:0}}>
       <div className="toolbar-header" style={{flexDirection:'column',alignItems:'stretch',gap:0,padding:'10px 14px 8px'}}>
-        {/* 1行目：ロゴ＋ユーザー＋新規（変更） */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
-          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
-            <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
-            {/* === 追加: Proバッジ（ヘッダーロゴ横） === */}
-            {isPro && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+        {/* 1行目：ロゴ＋ユーザー＋新規 */}
+        {isPC ? (
+          <div style={{marginBottom:6,padding:'12px 0'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4,justifyContent:'center'}}>
+              <div className="toolbar-logo">DocuMint</div>
+              {isPro && user && <span style={{fontSize:11,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'3px 7px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:6,overflow:'hidden',justifyContent:'flex-end'}}>
+              {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
+              {user ? (
+                <div style={{position:'relative'}}>
+                  <button className="auth-btn logged-in" onClick={onSignOut} title={user.email}>
+                    👤 {user.email.split('@')[0]}
+                  </button>
+                </div>
+              ) : (
+                <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
+              )}
+              <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s'}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
+            </div>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
-            {/* 追加: 同期ステータス */}
-            {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
-            {/* 追加: ログイン/ユーザーボタン */}
-            {user ? (
-              <div style={{position:'relative'}}>
-                <button className="auth-btn logged-in" onClick={onSignOut} title={user.email}>
-                  👤 {user.email.split('@')[0]}
-                </button>
-              </div>
-            ) : (
-              <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
-            )}
-            <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s'}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
+        ) : (
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
+              <div className="toolbar-logo">DocuMint</div>
+              {isPro && user && <span style={{fontSize:11,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'3px 7px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
+              {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
+              {user ? (
+                <div style={{position:'relative'}}>
+                  <button className="auth-btn logged-in" onClick={onSignOut} title={user.email}>
+                    👤 {user.email.split('@')[0]}
+                  </button>
+                </div>
+              ) : (
+                <button className="auth-btn" onClick={onShowAuth}>🔑 ログイン</button>
+              )}
+              <button className="btn btn-outline btn-sm" onClick={() => { if(confirm('現在の入力内容がリセットされます。\nよろしいですか？')) { resetDocument(); showToast('✅ 新規書類を作成しました'); setNewDocSuccess(true); setTimeout(() => setNewDocSuccess(false), 2000); } else { showToast('キャンセルしました'); } }} style={{fontSize:11,padding:'4px 8px',minWidth:0,border:'1.5px solid var(--color-border-dark)',background:newDocSuccess?'#e8f5e9':'transparent',color:newDocSuccess?'#2e7d32':undefined,transition:'all .3s'}}>{newDocSuccess?'✅ 作成しました':'＋ 新規'}</button>
+            </div>
           </div>
-        </div>
+        )}
         {/* 2行目：ツアー・操作説明・デザイン */}
-        <div style={{display:'flex',gap:8,overflow:'hidden'}}>
-          <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:13,padding:'12px 0',color:'#f59e0b',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>🔰 ツアー</button>
-          <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:13,padding:'12px 0',color:'#27ae60',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>📱 アプリ化</button>
-          <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>❓ 操作説明</button>
-          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}><img alt="デザイン" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:20,height:20,verticalAlign:"middle",marginRight:3}} /> デザイン</button>
+        <div style={{display:'flex',gap:isPC ? 4 : 8,overflow:'hidden'}}>
+          <button className="btn btn-ghost btn-sm" onClick={onStartTour} style={{flex:1,fontSize:isPC ? 11 : 13,padding:'12px 0',color:'#f59e0b',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>🔰 ツアー</button>
+          <button className="btn btn-ghost btn-sm" onClick={onShowInstall} style={{flex:1,fontSize:isPC ? 11 : 13,padding:'12px 0',color:'#27ae60',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>🏠 アプリ化</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setActiveModal('help')} style={{flex:1,fontSize:isPC ? 11 : 13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}>❓ 操作説明</button>
+          <button className="btn btn-ghost btn-sm" id="tour-design" onClick={() => setActiveModal('settings')} style={{flex:1,fontSize:isPC ? 11 : 13,padding:'12px 0',justifyContent:'center',minWidth:0,overflow:'hidden',background:'rgba(0,0,0,0.04)',borderRadius:6}}><img alt="デザイン" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAEHElEQVR4nMWUbUxbZRTHz3nuvX25pVDeLKyAwJjC7AZOpiMqsCXDJeiXaTFZjBpjpn5wyUjMYlxWKmhMNEZjlozIZ+Na3zDRTBy0iLzIhiPDDsbLaqGwxbZYCqW0vc89fiAIsrlvxn9yvpxz8jvPSc7zB/g/RES4HoB3KCLYnMLdAUBIThLI6RS2E4gAyW0XiQBtTro7CADAabu9iXw+HZHbROTWba+duLpsrjwbadh4rbgd1uRCbidib7bfahRMgVqWfvMhftOdB6urChpiEg91TEM46mUDHR+decq7Z7gv+cW8L/QZAnRRC2xutAEb/zRVXxBOvKsT5ipFS1gG2Qsw3QGQY1gFdU2Gw4cAknHo9tf4WmdtOX0DEb96dfxhGKpZAwBg6zCn0ORCfvnDRJNuEno0F3prRO+1eNz1G09CXP1z9pYa6f5JjgJXIe6Dvutm/xn34cL+zkvG10vbZmkwhGAHJEJAshNDB1O73ojsMivyaB4T5Hi/UxUDASY3GiHj5TSV64Kqoo0JmnzA6WnWd3HkQKS9Z+FI/p6v4eyLXOJR87ny+8+9RmQTRA8AAyA1FdSeTDOJ8rImuZJ59EnJYPRrpZJFYHKSsdIiJoVuJNb6hlOTlwxpvZFrj1sPXqGGp7l6xaBXfJHQUTg524xYFGf1DuAAAEvAawanUjQTYDT8q6TcmDdxZtpB8bW0TuDS861L+yJ93jV92HP+wcz9q1BtewBH+F7h20ie+OPMbu5ML+QAgCICUnv7ZWl+lGelMhUc+XnFaMoWIecRPec6M+pXTe+jh1uk7Nxc81g1vHqA1Ox9pfDNd/MLTN3NjSZdola41/6sA5O29bslJGrBV46/MFZWVVIhiiuKXiYxbF1Q1KxkcmdSntHE9OX9gYgmWxcF62Ml5F8OB4yrhcdeKjKOZjDNSpRSf58e1tWR2NuLyom3Rt9bUMtO7T1kSA1Fp6Wugm5iWkYHFSt7x2qFArUnlCYllwaT+TuHpGJlkhaVSRab+MUXf8Y2Gv7dZfMSoENlHg9wIMKP23I/kPnUXGf/ihQzWVIlwQoqmC1iOelWddp3gczeU5mGsdZC/cyXMAFMmBcTwtyyoapyWHfE1dTEwVPPAAAYIpK9BRDREmprTm+skvzX/xjikoZqWW7pE2o0zagOZT3KuzVN0IMNwucFx7h/aQmnhlJS2VeR4NvGe34AIrR7PCoAbLqH3U7M4UCVaDHjk/PB5osz0nMBnbGUCjSgKwZYyyJIigmQImEwzATj5XH5+9MVO06XVFsmiAgRkf4B3Apd/+ez+oEBZf/AQqoqJCQsXBuXdALGCgXt+PFd9w1KxXqfAuvWtgG7o4gI6+xu8V8bNqczu53Y9vTthrkF7HIB8+Z60LMlXw8A4KlXNzb5z/UXmxIJwJ6XTDAAAAAASUVORK5CYII=" style={{width:20,height:20,verticalAlign:"middle",marginRight:isPC ? 0 : 3}} /> デザイン</button>
         </div>
       </div>
       {/* 追加: Pro宣伝マーキー（無料ユーザーのみ・CSS純正アニメーション） */}
-      {!isPro && (
+      {!(isPro && user) && (
         <div className="pro-marquee" onClick={() => onShowUpgrade('upgrade')}>
           <div className="pro-marquee-track">
             <span>✨ 月額¥500で書類保存・テンプレートが無制限</span>
@@ -2254,7 +2303,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         </div>
       )}
       {/* === 追加: Proユーザー用ゴールドマーキー（感謝＋機能リマインド） === */}
-      {isPro && (
+      {isPro && user && (
         <div className="pro-marquee-gold">
           <div className="pro-marquee-track">
             <span>⭐ DocuMint Pro をご利用いただきありがとうございます ⭐ 保存テンプレート・保存書類が無制限でご利用いただけます</span>
@@ -2271,7 +2320,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <div className="section-title">書類情報</div>
         <div className="form-group"><label className="form-label">件名</label><input className="input" placeholder="〇〇工事 代金など" value={doc.subject} onChange={e=>setDocument({subject:e.target.value})} /></div>
         {doc.type!=='receipt' ? (
-          window.innerWidth <= 500 ? (
+          isNarrow ? (
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
               <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">発行日</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
               <div className="form-group" style={{minWidth:0,overflow:'hidden'}}><label className="form-label">{doc.type==='invoice'?'支払期日':'見積有効期限'}</label><input type="date" className="input" style={{WebkitAppearance:'none',maxWidth:'100%'}} value={doc.dueDate} onChange={e=>setDocument({dueDate:e.target.value})} /></div>
@@ -2283,7 +2332,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
             </div>
           )
         ) : (
-          <div className="form-group" style={window.innerWidth<=500?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={window.innerWidth<=500?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
+          <div className="form-group" style={isNarrow?{overflow:'hidden'}:{}}><label className="form-label">発行日</label><input type="date" className="input" style={isNarrow?{WebkitAppearance:'none',maxWidth:'100%'}:{}} value={doc.issueDate} onChange={e=>setDocument({issueDate:e.target.value})} /></div>
         )}
         <div className="form-group"><label className="form-label">書類番号</label><input className="input" placeholder="T1234567890123" value={doc.number} onChange={e=>setDocument({number:e.target.value})} /></div>
       </section>
@@ -2340,7 +2389,7 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
               <div style={{padding:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:cd.bg,border:`1px solid ${cd.border}`,borderRadius:8,marginBottom:14}}>
                   <span style={{fontSize:18}}>📱</span>
-                  <div style={{minWidth:0}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div><div style={{fontSize:11,color:'#94a3b8'}}>App Store / Google Play で無料配布</div></div>
+                  <div style={{minWidth:0,flex:1}}><div style={{fontSize:11,color:'#64748b',marginBottom:2}}>事前に専用アプリでPDFをアップロード</div><div style={{fontWeight:700,color:cd.color,fontSize:13}}>{cd.app}</div>{/* 追加: ストアリンクボタン */}<div style={{display:'flex',gap:6,marginTop:6}}><a href={cd.appStore} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 10px',background:'#000',color:'#fff',borderRadius:6,fontSize:10,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap'}}>🍎 App Store</a><a href={cd.playStore} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 10px',background:'#01875f',color:'#fff',borderRadius:6,fontSize:10,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap'}}>▶ Google Play</a></div></div>
                 </div>
                 <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:8}}>手順</div>
                 <ol style={{listStyle:'none',padding:0,margin:0}}>
@@ -2381,6 +2430,13 @@ function App() {
   // === 追加: 認証状態 ===
   const { user, authLoading, signOut, updatePassword, authEvent, setAuthEvent } = useAuth(); /* 変更: パスワード再設定対応 */
   const [showAuth, setShowAuth] = useState(false);
+
+  // === 追加: モーダル表示中の背景スクロールロック（モバイルSafari対策） ===
+  useEffect(() => {
+    const anyModal = !!(activeModal || upgradeModal || showInstall || showAuth);
+    if (anyModal) { document.body.style.overflow = 'hidden'; } else { document.body.style.overflow = ''; }
+    return () => { document.body.style.overflow = ''; };
+  }, [activeModal, upgradeModal, showInstall, showAuth]);
   const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'synced'
   const prevUserId = useRef(null);
   const isLoadingFromCloud = useRef(false); // 追加: クラウド読込中フラグ（不要な再保存防止）
