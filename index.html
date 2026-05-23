@@ -330,6 +330,15 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .pro-marquee-gold .pro-marquee-track span{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);}
 .pro-marquee-track{display:flex;align-items:center;width:max-content;flex-shrink:0;will-change:transform;animation:marquee 25s linear infinite;}
 .pro-marquee-track span{white-space:nowrap;flex-shrink:0;padding-right:50px;font-size:18px;line-height:1;font-weight:600;color:white;letter-spacing:.03em;}
+/* CHANGED: 空白行・コメント行・挿入ドロップダウン */
+.item-row.blank-row{background:transparent;border:1.5px dashed var(--color-border);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;}
+.item-row.comment-row{background:#fffbe6;border:1.5px solid #ffe58f;padding:12px;}
+.insert-row-wrap{display:flex;align-items:center;justify-content:center;height:20px;position:relative;}
+.insert-row-btn{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-size:10px;color:var(--color-text-muted);background:transparent;border:1px dashed var(--color-border);border-radius:99px;cursor:pointer;opacity:0;transition:opacity .15s;}
+.insert-row-wrap:hover .insert-row-btn{opacity:1;}
+.insert-dropdown{position:absolute;top:22px;left:50%;transform:translateX(-50%);background:white;border:1px solid var(--color-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:200;min-width:140px;overflow:hidden;}
+.insert-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-size:12px;background:transparent;border:none;cursor:pointer;font-family:var(--font-sans);color:var(--color-text);}
+.insert-dropdown button:hover{background:var(--color-surface);}
 </style>
 <!-- 追加: Service Worker登録（CDNスクリプトキャッシュで起動高速化） -->
 <script>
@@ -468,11 +477,13 @@ function saveToSupabase(userId, state, onStart, onDone) {
 // ==================== ストア ====================
 const STORAGE_KEY = 'invoice-app-storage';
 
-const createEmptyItem = () => ({
+const createItem = (type = 'normal') => ({
   id: Date.now() + Math.random(),
+  type,
   name: '', quantity: 1, unit: '式', unitPrice: 0,
   taxType: 'exclusive', taxRate: 10,
 });
+const createEmptyItem = () => createItem('normal');
 
 const defaultMyCompany = { name:'',postalCode:'',address:'',phone:'',fax:'',email:'',bankName:'',bankBranch:'',bankType:'普通',bankNumber:'',bankHolder:'',registrationNumber:'' };
 const defaultClient = { name:'',postalCode:'',address:'',honorific:'御中' };
@@ -514,7 +525,13 @@ function useAppState() {
   const setDocument = d => setDocState(p => ({...p,...d}));
   const setDocumentType = type => setDocState(p => ({...p, type}));
   const setDocSettings = s => setDocSettingsState(s);
-  const addItem = () => setDocState(p => ({...p, items:[...p.items, createEmptyItem()]}));
+  const addItem = (type = 'normal') => setDocState(p => ({...p, items:[...p.items, createItem(type)]}));
+  const insertItemAfter = (afterId, type) => setDocState(p => {
+    const idx = p.items.findIndex(i => i.id === afterId);
+    const next = [...p.items];
+    next.splice(idx + 1, 0, createItem(type));
+    return {...p, items: next};
+  });
   const removeItem = id => setDocState(p => ({...p, items: p.items.filter(i => i.id !== id)}));
   const updateItem = (id, data) => setDocState(p => ({...p, items: p.items.map(i => i.id === id ? {...i,...data} : i)}));
   const setStampImage = img => setDocState(p => ({...p, stampImage: img}));
@@ -554,14 +571,14 @@ function useAppState() {
     if (typeof data.isPro === 'boolean') setIsPro(data.isPro);
   };
 
-  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, addItem, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab, loadAll /* 追加 */ };
+  return { myCompany, setMyCompany, client, setClient, doc, setDocument, setDocumentType, docSettings, setDocSettings, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, addItem, insertItemAfter, removeItem, updateItem, setStampImage, setStampPosition, setLogoImage, setLogoPosition, resetDocument, isPro, setIsPro, activeModal, setActiveModal, mobileTab, setMobileTab, loadAll /* 追加 */ };
 }
 
 // ==================== ユーティリティ ====================
 const DOC_TYPE_LABELS = { invoice:'請求書', receipt:'領収書', estimate:'見積書' };
 const calcTax = items => {
   let subtotal=0, taxAmount=0;
-  items.forEach(item => {
+  items.forEach(item => { if(item.type && item.type !== 'normal') return;
     const lineTotal = item.quantity * item.unitPrice;
     if (item.taxType === 'inclusive') {
       const r = item.taxRate/100;
@@ -602,44 +619,89 @@ function NumInput({ value, onChange, placeholder='0', step=1, isFloat=false }) {
   );
 }
 
-function ItemsEditor({ doc, updateItem, removeItem }) {
+function ItemsEditor({ doc, updateItem, removeItem, insertItemAfter }) {
+  const [openDropdown, setOpenDropdown] = React.useState(null);
+  React.useEffect(() => {
+    if (!openDropdown) return;
+    const close = () => setOpenDropdown(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openDropdown]);
+
+  const handleInsert = (e, afterId, type) => {
+    e.stopPropagation();
+    insertItemAfter(afterId, type);
+    setOpenDropdown(null);
+  };
+
   return (
     <div className="items-editor">
       {doc.items.map((item, idx) => (
-        <div key={item.id} className="item-row">
-          <div className="item-row-header">
-            <span className="item-number">{idx+1}</span>
-            <button className="btn btn-ghost btn-sm item-delete" onClick={() => removeItem(item.id)}>×</button>
-          </div>
-          <div className="form-group">
-            <input className="input" placeholder="品目・作業内容を入力" value={item.name} onChange={e => updateItem(item.id,{name:e.target.value})} />
-          </div>
-          <div className="item-qty-row">
-            <div className="form-group">
-              <label className="form-label">数量</label>
-              <NumInput value={item.quantity} onChange={v => updateItem(item.id,{quantity:v})} placeholder="0" isFloat={true} />
+        <React.Fragment key={item.id}>
+          {(!item.type || item.type === 'normal') && (
+            <div className="item-row">
+              <div className="item-row-header">
+                <span className="item-number">{idx+1}</span>
+                <button className="btn btn-ghost btn-sm item-delete" onClick={() => removeItem(item.id)}>×</button>
+              </div>
+              <div className="form-group">
+                <input className="input" placeholder="品目・作業内容を入力" value={item.name} onChange={e => updateItem(item.id,{name:e.target.value})} />
+              </div>
+              <div className="item-qty-row">
+                <div className="form-group">
+                  <label className="form-label">数量</label>
+                  <NumInput value={item.quantity} onChange={v => updateItem(item.id,{quantity:v})} placeholder="0" isFloat={true} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">単位</label>
+                  <input className="input" placeholder="式" value={item.unit} onChange={e => updateItem(item.id,{unit:e.target.value})} style={{minWidth:0}} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">単価（円）</label>
+                  <NumInput value={item.unitPrice} onChange={v => updateItem(item.id,{unitPrice:v})} placeholder="0" />
+                </div>
+              </div>
+              <div className="item-tax-row">
+                <div className="tax-selects">
+                  <select className="input tax-select" value={item.taxType} onChange={e => updateItem(item.id,{taxType:e.target.value})}>
+                    <option value="exclusive">税別</option><option value="inclusive">税込</option>
+                  </select>
+                  <select className="input tax-rate-select" value={item.taxRate} onChange={e => updateItem(item.id,{taxRate:parseInt(e.target.value)})}>
+                    {[10,8,0].map(r => <option key={r} value={r}>{r}%</option>)}
+                  </select>
+                </div>
+                <div className="item-subtotal">{formatCurrency(item.quantity * item.unitPrice)}</div>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">単位</label>
-              <input className="input" placeholder="式" value={item.unit} onChange={e => updateItem(item.id,{unit:e.target.value})} style={{minWidth:0}} />
+          )}
+          {item.type === 'blank' && (
+            <div className="item-row blank-row">
+              <span style={{fontSize:11,color:'var(--color-text-muted)'}}>― 空白行 ―</span>
+              <button className="btn btn-ghost btn-sm item-delete" onClick={() => removeItem(item.id)}>×</button>
             </div>
-            <div className="form-group">
-              <label className="form-label">単価（円）</label>
-              <NumInput value={item.unitPrice} onChange={v => updateItem(item.id,{unitPrice:v})} placeholder="0" />
+          )}
+          {item.type === 'comment' && (
+            <div className="item-row comment-row">
+              <div className="item-row-header">
+                <span style={{fontSize:11,color:'#b45309',fontWeight:600}}>💬 コメント</span>
+                <button className="btn btn-ghost btn-sm item-delete" onClick={() => removeItem(item.id)}>×</button>
+              </div>
+              <input className="input" placeholder="コメント・備考を入力" value={item.name} onChange={e => updateItem(item.id,{name:e.target.value})} />
             </div>
-          </div>
-          <div className="item-tax-row">
-            <div className="tax-selects">
-              <select className="input tax-select" value={item.taxType} onChange={e => updateItem(item.id,{taxType:e.target.value})}>
-                <option value="exclusive">税別</option><option value="inclusive">税込</option>
-              </select>
-              <select className="input tax-rate-select" value={item.taxRate} onChange={e => updateItem(item.id,{taxRate:parseInt(e.target.value)})}>
-                {[10,8,0].map(r => <option key={r} value={r}>{r}%</option>)}
-              </select>
+          )}
+          {idx < doc.items.length - 1 && (
+            <div className="insert-row-wrap">
+              <button className="insert-row-btn" onClick={e => { e.stopPropagation(); setOpenDropdown(openDropdown === item.id ? null : item.id); }}>＋ ここに挿入 ▼</button>
+              {openDropdown === item.id && (
+                <div className="insert-dropdown">
+                  <button onClick={e => handleInsert(e, item.id, 'normal')}>＋ 通常行</button>
+                  <button onClick={e => handleInsert(e, item.id, 'blank')}>── 空白行</button>
+                  <button onClick={e => handleInsert(e, item.id, 'comment')}>💬 コメント行</button>
+                </div>
+              )}
             </div>
-            <div className="item-subtotal">{formatCurrency(item.quantity * item.unitPrice)}</div>
-          </div>
-        </div>
+          )}
+        </React.Fragment>
       ))}
     </div>
   );
@@ -2140,17 +2202,30 @@ function Preview({ state }) {
             </tr>
           </thead>
           <tbody>
-            {doc.items.filter(i=>i.name||i.unitPrice).map((item,idx) => (
-              <tr key={item.id} className={idx%2===0?'row-even':'row-odd'}>
-                <td className="col-name">{item.name||'—'}</td>
-                <td className="col-qty">{item.quantity}</td>
-                <td className="col-unit">{item.unit}</td>
-                <td className="col-price">{formatCurrency(item.unitPrice)}</td>
-                <td className="col-tax">{item.taxType==='inclusive'?'込':'別'} {item.taxRate}%</td>
-                <td className="col-total">{formatCurrency(item.quantity*item.unitPrice)}</td>
-              </tr>
-            ))}
-            {Array.from({length:Math.max(0,5-doc.items.filter(i=>i.name||i.unitPrice).length)}).map((_,i) => (
+            {doc.items.filter(i => {
+              if (i.type === 'blank') return true;
+              if (i.type === 'comment') return !!i.name;
+              return i.name || i.unitPrice;
+            }).map((item,idx) => {
+              const rowCls = idx%2===0?'row-even':'row-odd';
+              if (item.type === 'blank') {
+                return <tr key={item.id} className={rowCls} style={{height:16}}><td className="col-name">&nbsp;</td><td/><td/><td/><td/><td/></tr>;
+              }
+              if (item.type === 'comment') {
+                return <tr key={item.id} className={rowCls}><td className="col-name" colSpan={6}>{item.name}</td></tr>;
+              }
+              return (
+                <tr key={item.id} className={rowCls}>
+                  <td className="col-name">{item.name||'—'}</td>
+                  <td className="col-qty">{item.quantity}</td>
+                  <td className="col-unit">{item.unit}</td>
+                  <td className="col-price">{formatCurrency(item.unitPrice)}</td>
+                  <td className="col-tax">{item.taxType==='inclusive'?'込':'別'} {item.taxRate}%</td>
+                  <td className="col-total">{formatCurrency(item.quantity*item.unitPrice)}</td>
+                </tr>
+              );
+            })}
+            {Array.from({length:Math.max(0,5-doc.items.filter(i => i.type==='blank' || (i.type==='comment' && i.name) || (!i.type || i.type==='normal') && (i.name||i.unitPrice)).length)}).map((_,i) => (
               <tr key={`e${i}`} className={i%2===0?'row-even':'row-odd'}><td className="col-name">&nbsp;</td><td/><td/><td/><td/><td/></tr>
             ))}
           </tbody>
@@ -2175,11 +2250,12 @@ function Preview({ state }) {
 }
 
 function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onShowAuth, onSignOut, syncStatus, showToast, onRegisterPDF /* 追加: PDF関数共有 */ }) {
-  const { doc, setDocument, setDocumentType, setActiveModal, addItem, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
+  const { doc, setDocument, setDocumentType, setActiveModal, addItem, insertItemAfter, removeItem, updateItem, resetDocument, myCompany, client, setMyCompany, setClient, setStampImage, setLogoImage, templates, saveTemplate, loadTemplate, deleteTemplate, savedDocs, saveDocument, loadDocument, deleteDoc, duplicateDocument, isPro } = state;
   const { subtotal, taxAmount, total } = calcTax(doc.items);
   const [conveniOpen, setConveniOpen] = useState(false);
   const [conveniStore, setConveniStore] = useState('seven');
   const [newDocSuccess, setNewDocSuccess] = useState(false); /* 追加: 新規ボタンフィードバック */
+  const [addDropdownOpen, setAddDropdownOpen] = useState(false); /* CHANGED: 末尾行追加ドロップダウン */
   const panelRef = useRef(null);
   const [isPC, setIsPC] = useState(window.innerWidth > 768);
   const [isNarrow, setIsNarrow] = useState(window.innerWidth <= 500);
@@ -2188,6 +2264,12 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+  useEffect(() => {
+    if (!addDropdownOpen) return;
+    const close = () => setAddDropdownOpen(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [addDropdownOpen]);
 
   const CONVENI = {
     seven:{label:'セブン-イレブン',color:'#007940',bg:'#f0faf4',border:'#a7d7b8',app:'セブン‑イレブン マルチコピー',appStore:'https://apps.apple.com/jp/app/id1562641276',playStore:'https://play.google.com/store/apps/details?id=com.fujifilm.fb.mcopy&hl=ja',steps:['アプリでPDFをアップロードして予約番号（8桁）を取得','セブン-イレブンのマルチコピー機に行く','「プリント」→「ネットプリント」を選択','コピー機に予約番号を入力','用紙・カラー・枚数を確認して「プリントスタート」','料金を投入（白黒A4：20円 / カラーA4：60円）'],tips:['予約番号の有効期限は登録から30日間','ファイルサイズは10MB以内']},
@@ -2358,8 +2440,19 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         <StampUploader doc={doc} setStampImage={img => state.setLogoImage(img)} label="ロゴ" icon="🏢" />
       </section>
       <section id="tour-items" className="toolbar-section">
-        <div className="section-title-row"><span className="section-title">明細</span><button className="btn btn-outline btn-sm" onClick={() => { addItem(); showToast('＋ 行を追加しました'); setTimeout(() => { const rows = document.querySelectorAll('.item-row'); if(rows.length) rows[rows.length-1].scrollIntoView({behavior:'smooth',block:'center'}); }, 100); }}>＋ 行追加</button></div>
-        <ItemsEditor doc={doc} updateItem={updateItem} removeItem={removeItem} />
+        <div className="section-title-row"><span className="section-title">明細</span>
+          <div style={{position:'relative'}}>
+            <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setAddDropdownOpen(v => !v); }}>＋ 行追加 ▼</button>
+            {addDropdownOpen && (
+              <div className="insert-dropdown" style={{right:0,left:'auto',transform:'none'}}>
+                <button onClick={() => { addItem('normal'); setAddDropdownOpen(false); showToast('＋ 通常行を追加しました'); setTimeout(() => { const rows = document.querySelectorAll('.item-row'); if(rows.length) rows[rows.length-1].scrollIntoView({behavior:'smooth',block:'center'}); }, 100); }}>＋ 通常行</button>
+                <button onClick={() => { addItem('blank'); setAddDropdownOpen(false); showToast('── 空白行を追加しました'); }}>── 空白行</button>
+                <button onClick={() => { addItem('comment'); setAddDropdownOpen(false); showToast('💬 コメント行を追加しました'); }}>💬 コメント行</button>
+              </div>
+            )}
+          </div>
+        </div>
+        <ItemsEditor doc={doc} updateItem={updateItem} removeItem={removeItem} insertItemAfter={insertItemAfter} />
       </section>
       <section id="tour-totals" className="toolbar-section totals-section">
         <div className="total-row"><span>税別合計</span><span>{formatCurrency(subtotal)}</span></div>
