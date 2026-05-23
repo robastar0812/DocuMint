@@ -190,6 +190,11 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .doc-stamp.dragging{cursor:grabbing;opacity:.95;}
 
 @media screen and (max-width:1100px){.a4-paper{transform:scale(0.85);margin-bottom:-120px;}}
+@media screen and (min-width:901px){
+  /* CHANGED: PC版ヘッダー収まり修正 */
+  .toolbar-logo{font-size:20px;}
+  .auth-btn.logged-in{max-width:70px;}
+}
 @media screen and (max-width:900px){.a4-paper{transform:scale(0.7);margin-bottom:-240px;}.sidebar{width:280px;min-width:280px;}}
 /* PC幅では hidden クラスを無効化・両カラム表示 */
 @media screen and (min-width:769px){
@@ -2234,8 +2239,8 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
         {isPC ? (
           <div style={{marginBottom:6,padding:'12px 0'}}>
             <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4,justifyContent:'center'}}>
-              <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
-              {isPro && user && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+              <div className="toolbar-logo">DocuMint</div>
+              {isPro && user && <span style={{fontSize:11,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'3px 7px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
             </div>
             <div style={{display:'flex',alignItems:'center',gap:6,overflow:'hidden',justifyContent:'flex-end'}}>
               {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
@@ -2253,9 +2258,9 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
           </div>
         ) : (
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6,padding:'12px 0',overflow:'hidden'}}>
-            <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
-              <div className="toolbar-logo" style={{fontSize:28}}>DocuMint</div>
-              {isPro && user && <span style={{fontSize:12,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'4px 10px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
+            <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
+              <div className="toolbar-logo">DocuMint</div>
+              {isPro && user && <span style={{fontSize:11,fontWeight:800,color:'white',background:'linear-gradient(90deg,#b8860b,#daa520,#ffd700)',borderRadius:6,padding:'3px 7px',lineHeight:1.2,letterSpacing:'.05em',boxShadow:'0 1px 4px rgba(218,165,32,0.4)'}}>✦ PRO</span>}
             </div>
             <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0,overflow:'hidden'}}>
               {user && syncStatus && <span className={`sync-indicator ${syncStatus}`} title={syncStatus==='syncing'?'クラウド同期中':'同期完了'}>{syncStatus==='syncing'?'⏳':'✅'}</span>}
