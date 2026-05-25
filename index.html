@@ -184,7 +184,7 @@ select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg
 .doc-bank-info{font-size:12px;color:#333;line-height:1.7;-webkit-text-size-adjust:none;}
 .doc-notes{border-top:1px solid #e0dcd6;padding-top:16px;font-family:var(--font-sans);}
 .doc-notes-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:#777;margin-bottom:6px;}
-.doc-notes-body{font-size:12px;color:#444;line-height:1.8;white-space:pre-wrap;}
+.doc-notes-body{font-size:12px;color:#444;line-height:1.8;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;}
 .doc-stamp{position:absolute;width:80px;height:80px;object-fit:contain;opacity:.85;cursor:grab;user-select:none;z-index:10;transition:opacity .15s;border:2px dashed transparent;border-radius:4px;touch-action:none;-webkit-touch-callout:none;/* 追加: iOS長押しメニュー防止 */}
 .doc-stamp:hover{opacity:1;border-color:rgba(26,39,68,0.3);}
 .doc-stamp.dragging{cursor:grabbing;opacity:.95;}
@@ -728,15 +728,17 @@ const processImage = (file, isStamp, callback) => {
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, w, h);
-    // 黒背景を透過に（JPG/PNG両対応）
-    const imgData = ctx.getImageData(0, 0, w, h);
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i] < 40 && d[i+1] < 40 && d[i+2] < 40) {
-        d[i+3] = 0; // 透過
+    // CHANGED: 角印のみ黒背景を透過に（ロゴは透過しない）
+    if (isStamp) {
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] < 40 && d[i+1] < 40 && d[i+2] < 40) {
+          d[i+3] = 0;
+        }
       }
+      ctx.putImageData(imgData, 0, 0);
     }
-    ctx.putImageData(imgData, 0, 0);
     callback(canvas.toDataURL('image/png'));
     URL.revokeObjectURL(url);
   };
@@ -2137,9 +2139,11 @@ function Preview({ state }) {
       const scaleY = pr.height / previewRef.current.offsetHeight;
       const adjustedOffsetX = offset.current.x * scaleX;
       const adjustedOffsetY = offset.current.y * scaleY;
+      // CHANGED: y は A4固定高さ1123px基準で計算（行増加時のズレ防止）
+      const paperScale = pr.width / previewRef.current.offsetWidth;
       return {
         x: Math.max(0, Math.min(85, ((t.clientX - pr.left - adjustedOffsetX) / pr.width) * 100)),
-        y: Math.max(0, Math.min(92, ((t.clientY - pr.top - adjustedOffsetY) / pr.height) * 100)),
+        y: Math.max(0, Math.min(92, ((t.clientY - pr.top - adjustedOffsetY) / (1123 * paperScale)) * 100)),
       };
     };
 
@@ -2242,8 +2246,8 @@ function Preview({ state }) {
           </div>
         )}
         {doc.notes && <div className="doc-notes"><div className="doc-notes-title">備考</div><div className="doc-notes-body">{doc.notes}</div></div>}
-        {doc.stampImage && <img ref={stampRef} src={doc.stampImage} alt="角印" className={`doc-stamp ${dragging?'dragging':''}`} style={{left:`${doc.stampPosition.x}%`,top:`${doc.stampPosition.y}%`}} onMouseDown={handleStampMouseDown} onTouchStart={handleStampMouseDown} />}
-        {doc.logoImage && doc.logoPosition && <img ref={logoRef} src={doc.logoImage} alt="ロゴ" className={`doc-stamp ${logoDragging?'dragging':''}`} style={{left:`${doc.logoPosition?.x??10}%`,top:`${doc.logoPosition?.y??90}%`,width:'120px',height:'auto'}} onMouseDown={handleLogoMouseDown} onTouchStart={handleLogoMouseDown} />}
+        {doc.stampImage && <img ref={stampRef} src={doc.stampImage} alt="角印" className={`doc-stamp ${dragging?'dragging':''}`} style={{left:`${doc.stampPosition.x}%`,top:`${(doc.stampPosition.y/100)*1123}px`}} onMouseDown={handleStampMouseDown} onTouchStart={handleStampMouseDown} />}
+        {doc.logoImage && doc.logoPosition && <img ref={logoRef} src={doc.logoImage} alt="ロゴ" className={`doc-stamp ${logoDragging?'dragging':''}`} style={{left:`${doc.logoPosition?.x??10}%`,top:`${((doc.logoPosition?.y??90)/100)*1123}px`,width:'120px',height:'auto'}} onMouseDown={handleLogoMouseDown} onTouchStart={handleLogoMouseDown} />}
       </div>
     </div>
   );
