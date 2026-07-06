@@ -2604,36 +2604,42 @@ function App() {
   };
 
   // === Stripe決済後のリダイレクト検知 ===
-  const [checkoutDone, setCheckoutDone] = useState(false); /* 追加: 決済成功フラグ */
+  /* CHANGED: セキュリティ修正 — ?checkout=success だけではPro付与しない。
+     session_id を /api/verify-checkout-session でStripeに照合し、支払い確認済みの場合のみ有効化。
+     profiles.is_pro のDB更新もサーバー側(service role)に一本化。
+     （旧: クライアントが profiles.is_pro を直接更新 → URL偽装で自己付与可能だった） */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get('checkout');
-    if (checkout === 'success') {
-      setIsPro(true); // 有料プラン有効化
-      setCheckoutDone(true); /* 追加: フラグ保持（user読込待ち用） */
-      setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！保存テンプレート・保存書類が無制限になりました。' });
+    const sessionId = params.get('session_id');
+    if (checkout === 'success' && sessionId) {
+      setCheckoutMsg({ type: 'success', text: '⏳ 決済を確認しています...' });
+      fetch('/api/verify-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId }),
+      }).then(r => r.json()).then(data => {
+        if (data && data.isPro) {
+          setIsPro(true); // 有料プラン有効化（サーバー照合済み）
+          setCheckoutMsg({ type: 'success', text: '🎉 有料プランへのアップグレードが完了しました！保存テンプレート・保存書類が無制限になりました。' });
+        } else {
+          setCheckoutMsg({ type: 'cancel', text: '決済の確認中です。反映まで数分かかる場合があります。' });
+        }
+        setTimeout(() => setCheckoutMsg(null), 8000);
+      }).catch(() => {
+        /* 通信エラー時もWebhookが is_pro を更新するため、再ログイン時に反映される */
+        setCheckoutMsg({ type: 'cancel', text: '決済の確認中です。反映まで数分かかる場合があります。' });
+        setTimeout(() => setCheckoutMsg(null), 8000);
+      });
     } else if (checkout === 'cancel') {
       setCheckoutMsg({ type: 'cancel', text: '決済がキャンセルされました。いつでも再度お試しいただけます。' });
+      setTimeout(() => setCheckoutMsg(null), 8000);
     }
     // URLからクエリパラメータを除去
     if (checkout) {
       window.history.replaceState({}, '', window.location.pathname);
-      // 8秒後に通知を消す
-      setTimeout(() => setCheckoutMsg(null), 8000);
     }
   }, []);
-
-  // === 追加: user読込完了後にSupabaseのis_proを更新 ===
-  useEffect(() => {
-    if (checkoutDone && user) {
-      supabaseClient.from('profiles').update({ is_pro: true }).eq('id', user.id).then(() => {
-        setCheckoutDone(false); /* 更新完了→フラグ解除 */
-      }).catch(() => {
-        setCheckoutDone(false); /* 修正追加: エラー時もフラグ解除（無限ループ防止） */
-        console.warn('Supabase is_pro更新に失敗しました。Webhookでリカバリーされます。');
-      });
-    }
-  }, [checkoutDone, user]);
 
   // === 追加: メール確認成功時のトースト表示 ===
   useEffect(() => {
@@ -2669,9 +2675,11 @@ function App() {
               <button onClick={async () => {
                 const win = window.open('', '_blank'); /* 修正: fetch前に空タブを開く（PWAポップアップブロック回避） */
                 try {
+                  /* CHANGED: セキュリティ修正 — 認証トークンを送信（サーバー側でメール改ざん防止の本人確認） */
+                  const { data: { session: authSession } } = await supabaseClient.auth.getSession();
                   const res = await fetch('/api/create-portal-session', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (authSession?.access_token || '') },
                     body: JSON.stringify({ email: user.email }),
                   });
                   const data = await res.json();

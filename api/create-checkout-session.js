@@ -1,5 +1,19 @@
 const Stripe = require('stripe');
 
+// === セキュリティ修正: リダイレクト先を許可ドメインに限定（Origin/Refererヘッダ偽装対策） ===
+function resolveBaseUrl(req, allowedOrigin) {
+  const rawOrigin = req.headers.origin || req.headers.referer || '';
+  try {
+    const u = new URL(rawOrigin);
+    const origin = `${u.protocol}//${u.host}`;
+    // 本番ドメイン・Vercelプレビュー(staging等)・ローカル開発のみ許可
+    if (origin === allowedOrigin || u.hostname.endsWith('.vercel.app') || u.hostname === 'localhost') {
+      return origin;
+    }
+  } catch (e) { /* Origin無し・不正URL → フォールバック */ }
+  return allowedOrigin;
+}
+
 module.exports = async function handler(req, res) {
   // CORS対応（修正: 自ドメインに制限）
   const allowedOrigin = process.env.ALLOWED_ORIGIN || 'https://docu-mint-two.vercel.app';
@@ -22,9 +36,8 @@ module.exports = async function handler(req, res) {
     // リクエストボディからメールアドレスを取得（追加）
     const { email } = req.body || {};
 
-    // リクエストボディからリダイレクトURLを取得（フォールバック付き）
-    const origin = req.headers.origin || req.headers.referer || 'https://docu-mint-two.vercel.app';
-    const baseUrl = origin.replace(/\/$/, '');
+    // リダイレクト先（修正: 許可ドメインのみ）
+    const baseUrl = resolveBaseUrl(req, allowedOrigin);
 
     const sessionParams = {
       mode: 'subscription',

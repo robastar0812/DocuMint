@@ -68,6 +68,20 @@ Chk 'A34 isPC 初期値 innerWidth>900'            ($html -match 'useState\(wind
 Chk 'A35 isPC resize も innerWidth>900'         ($html -match 'setIsPC\(window\.innerWidth > 900\)')
 Chk 'A36 旧境界 isPC>768 が残存しない'          (-not ($html -match '(?:useState|setIsPC)\(window\.innerWidth > 768\)'))
 
+# A37-A44: 決済フロー セキュリティ修正（Pro自己付与・ポータルなりすまし・リダイレクト偽装）
+$verifyApiPath = Join-Path $PSScriptRoot '..\api\verify-checkout-session.js'
+$verifyApi  = if (Test-Path $verifyApiPath) { Get-Content -Raw -Encoding UTF8 $verifyApiPath } else { '' }
+$portalApi  = Get-Content -Raw -Encoding UTF8 (Join-Path $PSScriptRoot '..\api\create-portal-session.js')
+$checkoutApi = Get-Content -Raw -Encoding UTF8 (Join-Path $PSScriptRoot '..\api\create-checkout-session.js')
+Chk 'A37 verify-checkout-session.js 存在'       (Test-Path $verifyApiPath)
+Chk 'A38 verify API: payment_status照合'        ($verifyApi -match "payment_status !== 'paid'")
+Chk 'A39 verify API: session_id形式チェック'    ($verifyApi -match '\^cs_')
+Chk 'A40 HTML: verify API 呼出'                 ($html -match '/api/verify-checkout-session')
+Chk 'A41 HTML: profiles.is_pro直接更新なし'     (-not ($html -match "update\(\{ is_pro"))
+Chk 'A42 HTML: portal fetch に Authorization'   ($html -match "'/api/create-portal-session'[\s\S]{0,200}Authorization")
+Chk 'A43 portal API: authトークン検証'          ($portalApi -match 'auth/v1/user')
+Chk 'A44 両API: リダイレクト先許可制限'         (($portalApi -match 'resolveBaseUrl') -and ($checkoutApi -match 'resolveBaseUrl'))
+
 # ===== カテゴリ B: リグレッション =====
 Section 'B. リグレッション'
 
