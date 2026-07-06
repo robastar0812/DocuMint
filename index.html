@@ -2261,10 +2261,10 @@ function Toolbar({ state, onStartTour, onShowUpgrade, onShowInstall, user, onSho
   const [newDocSuccess, setNewDocSuccess] = useState(false); /* 追加: 新規ボタンフィードバック */
   const [addDropdownOpen, setAddDropdownOpen] = useState(false); /* CHANGED: 末尾行追加ドロップダウン */
   const panelRef = useRef(null);
-  const [isPC, setIsPC] = useState(window.innerWidth > 768);
+  const [isPC, setIsPC] = useState(window.innerWidth > 900); /* CHANGED: 768→900 CSSの.toolbar-logo/sidebar階層(901/900)とヘッダー描画境界を一致させ、iPad縦(769〜900px)のヘッダー崩れを解消 */
   const [isNarrow, setIsNarrow] = useState(window.innerWidth <= 500);
   useEffect(() => {
-    const onResize = () => { setIsPC(window.innerWidth > 768); setIsNarrow(window.innerWidth <= 500); };
+    const onResize = () => { setIsPC(window.innerWidth > 900); setIsNarrow(window.innerWidth <= 500); }; /* CHANGED: 768→900（上記と同一境界） */
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
